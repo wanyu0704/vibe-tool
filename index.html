@@ -1,0 +1,3694 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#588157">
+  <title>森境專注鐘 | 五階段進化與生態養成</title>
+  <style>
+    :root {
+      --bg-main: #F6F3EC;
+      --bg-sidebar: #ECE6DA;
+      --card-bg: #FFFFFF;
+      --primary: #588157;
+      --primary-dark: #3A5A40;
+      --primary-light: #E8F0E8;
+      --accent: #E07A5F;
+      --wood: #7F5539;
+      --wood-dark: #4A3728;
+      --text-main: #2F3E46;
+      --text-muted: #6C757D;
+      --border-color: #DFD7C8;
+      --danger: #D90429;
+      --legend: #7209B7;
+    }
+
+    body.theme-apricot {
+      --bg-main: #FDF8F2; --bg-sidebar: #F4EAE0; --primary: #D48C56; --primary-dark: #A66332; --primary-light: #FBF0E6;
+    }
+    body.theme-sakura {
+      --bg-main: #FDF6F7; --bg-sidebar: #F5E6E8; --primary: #D87A88; --primary-dark: #A85260; --primary-light: #FCEBEF;
+    }
+    body.theme-ocean {
+      --bg-main: #F2F7FA; --bg-sidebar: #E3EDF2; --primary: #457B9D; --primary-dark: #1D3557; --primary-light: #E6F0F5;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif; }
+    body { background-color: var(--bg-main); color: var(--text-main); min-height: 100vh; display: flex; overflow-x: hidden; transition: background-color 0.3s; }
+
+    /* 全螢幕灑花 Canvas */
+    #confetti-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 2000;
+    }
+
+    /* ── 左側功能欄（嚴格四字對齊、支援收合） ── */
+    .sidebar {
+      width: 220px;
+      background: var(--bg-sidebar);
+      border-right: 1.5px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 16px;
+      gap: 10px;
+      flex-shrink: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 100;
+    }
+    .sidebar.collapsed {
+      width: 0;
+      padding: 24px 0;
+      overflow: hidden;
+      transform: translateX(-100%);
+      border-right: none;
+    }
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--primary-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding-bottom: 14px;
+      margin-bottom: 6px;
+      border-bottom: 1.5px dashed var(--border-color);
+      white-space: nowrap;
+    }
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 14px;
+      border: none;
+      background: transparent;
+      color: var(--text-main);
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .nav-btn .nav-icon {
+      width: 24px;
+      text-align: center;
+      font-size: 1.1rem;
+      display: inline-block;
+    }
+    .nav-btn:hover { background: rgba(255,255,255,0.6); }
+    .nav-btn.active {
+      background: var(--primary);
+      color: #FFFFFF;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    /* ── 主內容區 ── */
+    .main-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 18px;
+      overflow-y: auto;
+      max-height: 100vh;
+    }
+    .top-bar {
+      width: 100%;
+      max-width: 680px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .btn-icon-toggle {
+      background: var(--card-bg);
+      border: 1.5px solid var(--border-color);
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 1.15rem;
+      color: var(--wood-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+      transition: all 0.2s;
+    }
+    .btn-icon-toggle:hover { background: var(--primary-light); }
+
+    /* 僅在專注計時頁顯示的界別切換器 */
+    .realm-switch {
+      display: flex;
+      background: #E2DACB;
+      padding: 4px;
+      border-radius: 99px;
+      gap: 4px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .realm-btn {
+      border: none;
+      padding: 6px 14px;
+      border-radius: 99px;
+      background: transparent;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: var(--text-main);
+      transition: all 0.2s;
+    }
+    .realm-btn.active {
+      background: var(--card-bg);
+      color: var(--primary-dark);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 680px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* 90秒體驗預覽倒數橫幅 */
+    .demo-countdown-bar {
+      display: none;
+      width: 100%;
+      background: linear-gradient(90deg, #7209B7, #4361EE);
+      color: #FFFFFF;
+      padding: 10px 16px;
+      border-radius: 16px;
+      font-size: 0.86rem;
+      font-weight: 800;
+      text-align: center;
+      box-shadow: 0 4px 14px rgba(114, 9, 183, 0.25);
+    }
+
+    /* 標籤列 */
+    .tag-pills {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 4px;
+    }
+    .tag-pill {
+      background: var(--card-bg);
+      border: 1.5px solid var(--border-color);
+      padding: 5px 14px;
+      border-radius: 99px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-weight: 700;
+      transition: all 0.2s;
+    }
+    .tag-pill.active {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+
+    /* ── 核心卡片 ── */
+    .card {
+      background: var(--card-bg);
+      border-radius: 28px;
+      padding: 24px 22px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+      border: 1.5px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .panic-banner {
+      display: none;
+      width: 100%;
+      background: #FFE8E8;
+      border: 2px solid var(--danger);
+      color: var(--danger);
+      border-radius: 14px;
+      padding: 10px;
+      font-size: 0.9rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+      animation: pulseAlert 0.9s infinite alternate;
+    }
+    @keyframes pulseAlert { 0% { transform: scale(0.99); opacity: 0.85; } 100% { transform: scale(1.01); opacity: 1; } }
+
+    .target-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .target-btn {
+      background: var(--primary-light);
+      border: 1.5px dashed var(--primary);
+      padding: 7px 16px;
+      border-radius: 14px;
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: var(--primary-dark);
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+    .target-btn:hover { transform: scale(1.03); }
+
+    /* 五階段進化進度指示器 */
+    .evo-stage-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+      background: #F8F6F0;
+      padding: 5px 14px;
+      border-radius: 99px;
+      border: 1px solid var(--border-color);
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--wood-dark);
+    }
+    .evo-dots {
+      display: flex;
+      gap: 4px;
+      margin-left: 4px;
+    }
+    .evo-dot {
+      width: 15px;
+      height: 7px;
+      border-radius: 99px;
+      background: #DFD7C8;
+      transition: background 0.3s, transform 0.3s;
+    }
+    .evo-dot.active {
+      background: var(--primary);
+      transform: scaleY(1.15);
+    }
+
+    .viewport {
+      width: 230px;
+      height: 215px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      margin: 2px 0;
+    }
+    .main-svg { width: 100%; height: 100%; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.06)); transition: transform 0.3s ease; }
+
+    /* ── 五階段專屬餵食與照料動態動畫 ── */
+    @keyframes bottleFeedAnim {
+      0%, 100% { transform: translate(0, 0) rotate(-18deg); }
+      50% { transform: translate(-6px, 5px) rotate(-38deg); }
+    }
+    @keyframes milkDropAnim {
+      0% { opacity: 0; transform: translate(0, 0) scale(0.6); }
+      40% { opacity: 1; transform: translate(-4px, 6px) scale(1); }
+      100% { opacity: 0; transform: translate(-10px, 15px) scale(0.4); }
+    }
+    @keyframes foodBounceAnim {
+      0%, 100% { transform: translate(0, 0) rotate(5deg) scale(1); }
+      50% { transform: translate(-7px, -6px) rotate(-12deg) scale(1.1); }
+    }
+    @keyframes babyChewAnim {
+      0%, 100% { transform: scale(1, 1); }
+      50% { transform: scale(1.04, 0.96) translateY(2px); }
+    }
+    @keyframes sunRaySpin {
+      0% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(180deg) scale(1.08); }
+      100% { transform: rotate(360deg) scale(1); }
+    }
+    @keyframes waterDropFall {
+      0% { opacity: 0; transform: translateY(-6px); }
+      35% { opacity: 1; }
+      100% { opacity: 0; transform: translateY(22px); }
+    }
+    @keyframes fertSparkleUp {
+      0% { opacity: 0; transform: translateY(10px) scale(0.5); }
+      50% { opacity: 1; transform: translateY(0px) scale(1.1); }
+      100% { opacity: 0; transform: translateY(-14px) scale(0.6); }
+    }
+    @keyframes butterflyFlutter {
+      0%, 100% { transform: translate(0, 0) rotate(-8deg) scaleX(1); }
+      50% { transform: translate(-10px, -8px) rotate(12deg) scaleX(0.8); }
+    }
+    @keyframes eggWobble {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-6deg); }
+      75% { transform: rotate(6deg); }
+    }
+    @keyframes ghostSoulFloat {
+      0%, 100% { transform: translateY(0px) rotate(-4deg); opacity: 0.78; }
+      50% { transform: translateY(-10px) rotate(5deg); opacity: 0.45; }
+    }
+    @keyframes nutrientFloatIn {
+      0% { opacity: 0; transform: translate(12px, -10px) scale(0.5); }
+      50% { opacity: 1; transform: translate(4px, -3px) scale(1); }
+      100% { opacity: 0; transform: translate(-6px, 5px) scale(0.2); }
+    }
+
+    .anim-bottle { animation: bottleFeedAnim 1.4s ease-in-out infinite; transform-origin: 85px 45px; }
+    .anim-milk-drop { animation: milkDropAnim 1.4s ease-in-out infinite; }
+    .anim-food { animation: foodBounceAnim 1.1s ease-in-out infinite; transform-origin: 88px 65px; }
+    .anim-chew { animation: babyChewAnim 1.1s ease-in-out infinite; transform-origin: 60px 80px; }
+    .anim-sun { animation: sunRaySpin 8s linear infinite; transform-origin: 88px 26px; }
+    .anim-water-1 { animation: waterDropFall 1.1s linear infinite; }
+    .anim-water-2 { animation: waterDropFall 1.1s linear 0.38s infinite; }
+    .anim-water-3 { animation: waterDropFall 1.1s linear 0.75s infinite; }
+    .anim-sparkle-1 { animation: fertSparkleUp 1.6s ease-out infinite; }
+    .anim-sparkle-2 { animation: fertSparkleUp 1.6s ease-out 0.6s infinite; }
+    .anim-butterfly { animation: butterflyFlutter 2s ease-in-out infinite; transform-origin: 85px 35px; }
+    .anim-egg { animation: eggWobble 1.8s ease-in-out infinite; transform-origin: 60px 82px; }
+    .anim-soul { animation: ghostSoulFloat 2.4s ease-in-out infinite; }
+    .anim-nutrient { animation: nutrientFloatIn 1.7s ease-in-out infinite; }
+
+    .timer-display {
+      font-size: 3.9rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: var(--wood-dark);
+      margin: 2px 0;
+      font-variant-numeric: tabular-nums;
+    }
+    .status-hint {
+      font-size: 0.86rem;
+      color: var(--text-muted);
+      min-height: 22px;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    .time-selector {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .time-btn {
+      background: #F4F1EA;
+      border: 1.5px solid transparent;
+      padding: 7px 14px;
+      border-radius: 12px;
+      font-size: 0.84rem;
+      cursor: pointer;
+      color: var(--text-main);
+      font-weight: 700;
+      transition: all 0.2s;
+    }
+    .time-btn.active {
+      background: var(--primary);
+      color: #FFFFFF;
+    }
+
+    .controls-row {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+      justify-content: center;
+      margin-bottom: 14px;
+    }
+    .btn {
+      padding: 12px 26px;
+      border-radius: 16px;
+      font-size: 0.96rem;
+      font-weight: 800;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn-start { background: var(--primary); color: #fff; flex: 1; max-width: 180px; box-shadow: 0 4px 12px rgba(88,129,87,0.25); }
+    .btn-start:hover { background: var(--primary-dark); }
+    .btn-pause { background: var(--wood); color: #fff; flex: 1; max-width: 180px; }
+    .btn-giveup { background: #FFF0F0; color: var(--danger); border: 1.5px solid #FFCDD2; }
+    .btn-harvest { background: linear-gradient(135deg, #F4A261, #E76F51); color: white; flex: 1; max-width: 220px; font-size: 1.05rem; box-shadow: 0 4px 15px rgba(231,111,81,0.4); animation: pulseAlert 0.8s infinite alternate; }
+
+    /* 白噪音控制台 */
+    .sound-bar {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: #F9F8F5;
+      border-radius: 18px;
+      padding: 14px 16px;
+      font-size: 0.84rem;
+      border: 1.5px solid var(--border-color);
+    }
+    .sound-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .sound-select { padding: 5px 10px; border-radius: 10px; border: 1.5px solid var(--border-color); background: white; font-size: 0.82rem; font-weight: 700; color: var(--text-main); }
+    .volume-slider { width: 95px; accent-color: var(--primary); }
+
+    /* ── 浮空棲息仙境島嶼（單一完整風景插畫，立即動態漫步） ── */
+    .sanctuary-scenic-canvas {
+      width: 100%;
+      height: 480px;
+      border-radius: 26px;
+      overflow: hidden;
+      border: 2px solid var(--border-color);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+      position: relative;
+      background: #A2D2FF;
+    }
+    .scenic-bg-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .scenic-entities-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      overflow: hidden;
+    }
+
+    .resident-entity {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+      transition: left 3.8s linear, top 3.8s linear;
+      will-change: left, top;
+      transform: translate(-50%, -50%);
+    }
+    .entity-shadow {
+      position: absolute;
+      bottom: 2px;
+      width: 30px;
+      height: 7px;
+      background: radial-gradient(ellipse, rgba(0,0,0,0.28) 0%, rgba(0,0,0,0) 70%);
+      z-index: 1;
+    }
+    .entity-body {
+      position: relative;
+      z-index: 2;
+      width: 48px;
+      height: 48px;
+      transition: transform 0.25s ease;
+    }
+    .entity-tag {
+      position: relative;
+      z-index: 3;
+      font-size: 0.66rem;
+      font-weight: 800;
+      color: #2F3E46;
+      background: rgba(255,255,255,0.92);
+      padding: 1px 6px;
+      border-radius: 99px;
+      margin-top: -3px;
+      white-space: nowrap;
+      pointer-events: none;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    }
+    body.hide-island-tags .entity-tag { display: none; }
+
+    .sway-anim svg { animation: plantSway 2.4s ease-in-out infinite alternate; transform-origin: bottom center; }
+    .float-anim svg { animation: skyFloat 2.6s ease-in-out infinite alternate; }
+    .swim-anim svg { animation: oceanSwim 2s ease-in-out infinite alternate; }
+    .walk-anim svg { animation: landWalk 0.9s ease-in-out infinite alternate; transform-origin: bottom center; }
+
+    @keyframes plantSway { 0% { transform: rotate(-6deg); } 100% { transform: rotate(6deg); } }
+    @keyframes skyFloat { 0% { transform: translateY(-5px); } 100% { transform: translateY(5px); } }
+    @keyframes oceanSwim { 0% { transform: translateY(-3px) rotate(-3deg); } 100% { transform: translateY(3px) rotate(3deg); } }
+    @keyframes landWalk { 0% { transform: translateY(0px) rotate(-2deg); } 100% { transform: translateY(-4px) rotate(2deg); } }
+
+    /* 次級卡片與圖鑑 */
+    .sub-card {
+      background: var(--card-bg);
+      border-radius: 28px;
+      padding: 24px;
+      border: 1.5px solid var(--border-color);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.03);
+    }
+    .filter-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .f-btn {
+      background: #F4F1EA;
+      border: 1.5px solid transparent;
+      padding: 6px 14px;
+      border-radius: 12px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+    .f-btn.active { background: var(--primary-dark); color: white; }
+
+    .grid-pokedex {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+      gap: 12px;
+      max-height: 460px;
+      overflow-y: auto;
+      padding: 4px;
+    }
+    .slot-item {
+      background: #FAF8F4;
+      border: 1.5px solid var(--border-color);
+      border-radius: 18px;
+      padding: 12px 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 0.78rem;
+      gap: 6px;
+      text-align: center;
+      transition: transform 0.15s;
+    }
+    .slot-item:hover { transform: translateY(-2px); }
+
+    /* 圖鑑未解鎖：純黑影輪廓外框 ＋ 問號 */
+    .slot-icon-wrap {
+      position: relative;
+      width: 56px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .slot-icon-wrap svg {
+      width: 100%;
+      height: 100%;
+    }
+    .slot-item.locked .slot-icon-wrap svg {
+      filter: brightness(0) opacity(0.18);
+    }
+    .mystery-q {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.45rem;
+      font-weight: 900;
+      color: var(--wood-dark);
+      text-shadow: 0 1px 3px rgba(255,255,255,0.9);
+      pointer-events: none;
+    }
+
+    .slot-badge {
+      font-size: 0.65rem;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-weight: 800;
+    }
+    .legendary-slot { border: 2px solid var(--legend) !important; background: #FAF5FF !important; }
+
+    /* 好友對戰與排行榜樣式 */
+    .rank-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .rank-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: #FAF8F4;
+      border: 1.5px solid var(--border-color);
+      border-radius: 16px;
+      font-size: 0.88rem;
+    }
+    .rank-row.me {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      font-weight: 800;
+    }
+    .rank-medal {
+      font-size: 1.2rem;
+      width: 32px;
+      text-align: center;
+    }
+    .pk-box {
+      background: #FAF8F4;
+      border: 1.5px solid var(--border-color);
+      border-radius: 20px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .pk-input {
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: 10px;
+      border: 1.5px solid var(--border-color);
+      font-size: 0.82rem;
+      outline: none;
+    }
+
+    /* 手機與平板自適應：不遮住側欄、輸入欄及操作按鈕 */
+    @media (max-width: 800px) {
+      body { display:block; min-height:100dvh; }
+      .sidebar { width:100%; flex-direction:row; overflow-x:auto; padding:10px; gap:6px; border-right:0; border-bottom:1px solid var(--border-color); position:relative; }
+      .sidebar.collapsed { width:100%; height:0; padding:0; transform:none; border:0; }
+      .brand-title { display:none; }
+      .nav-btn { flex:0 0 auto; padding:10px; font-size:.78rem; gap:4px; }
+      .nav-btn .nav-icon { width:auto; }
+      .main-wrapper { padding:12px 10px 24px; max-height:none; min-height:calc(100dvh - 65px); overflow:visible; }
+      .top-bar { gap:8px; }
+      .realm-switch { flex:1; }
+      .realm-btn { padding:6px 9px; font-size:.73rem; }
+      .card,.sub-card { padding:16px 12px; border-radius:19px; }
+      .sanctuary-scenic-canvas { height:330px; }
+      .timer-display { font-size:3.2rem; }
+      .rank-row { gap:8px; padding:10px; }
+      .pk-box { padding:12px; }
+      .social-action-row { display:flex; flex-wrap:wrap; gap:8px; }
+      .social-action-row > * { flex:1 1 160px; min-width:0; max-width:none !important; }
+      .pk-input { min-width:0; font-size:16px; }
+      .social-code-row { display:flex; flex-wrap:wrap; gap:8px; }
+      .social-code-row > input { flex:1 1 170px; }
+      .social-code-row > button { flex:0 0 auto; }
+    }
+    @media (max-width: 380px) {
+      .nav-btn { font-size:.72rem; padding:8px 6px; }
+      .timer-display { font-size:2.8rem; }
+      .sanctuary-scenic-canvas { height:260px; }
+    }
+
+    /* 設定頁面區塊 */
+    .settings-group {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .setting-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 16px;
+      background: #FAF8F4;
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+      font-size: 0.9rem;
+      font-weight: 700;
+      gap: 12px;
+    }
+    .setting-desc { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; margin-top: 2px; }
+
+    /* 彈窗 */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1500;
+      padding: 16px;
+    }
+    .modal-box {
+      background: white;
+      padding: 24px;
+      border-radius: 28px;
+      text-align: center;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 20px 45px rgba(0,0,0,0.2);
+    }
+    .select-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 16px 0;
+      max-height: 320px;
+      overflow-y: auto;
+      padding: 4px;
+    }
+    .select-item {
+      padding: 10px 6px;
+      border: 1.5px solid var(--border-color);
+      border-radius: 16px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 800;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      background: #FAF8F4;
+      position: relative;
+    }
+    .select-item:hover { border-color: var(--primary); background: var(--primary-light); }
+    .select-item.locked-pick { opacity: 0.55; background: #EFECE6; }
+
+    /* 自訂訊息提示框與互動對話視窗 */
+    #custom-dialog-modal {
+      z-index: 2500;
+    }
+  </style>
+</head>
+<body>
+
+<!-- 全螢幕慶祝灑花畫布 -->
+<canvas id="confetti-canvas"></canvas>
+
+<!-- 左側導航欄：嚴格四字對齊 -->
+<aside class="sidebar" id="sidebar">
+  <div class="brand-title">🌱 森境專注</div>
+  <button class="nav-btn active" data-view="timer"><span class="nav-icon">⏱️</span><span>專注計時</span></button>
+  <button class="nav-btn" data-view="habitat"><span class="nav-icon">🏝️</span><span>生態仙境</span></button>
+  <button class="nav-btn" data-view="pokedex"><span class="nav-icon">📖</span><span>物種圖鑑</span></button>
+  <button class="nav-btn" data-view="journal"><span class="nav-icon">📜</span><span>專注日誌</span></button>
+  <button class="nav-btn" data-view="social"><span class="nav-icon">⚔️</span><span>好友對戰</span></button>
+  <button class="nav-btn" data-view="settings"><span class="nav-icon">⚙️</span><span>系統設定</span></button>
+</aside>
+
+<!-- 主畫面 -->
+<main class="main-wrapper">
+  <div class="top-bar">
+    <button class="btn-icon-toggle" id="btn-toggle-sidebar" title="收合/展開功能欄">☰</button>
+    <!-- 界別切換器：僅在「專注計時」頁顯示，不干擾圖鑑與日誌 -->
+    <div class="realm-switch" id="timer-realm-switch">
+      <button class="realm-btn active" data-realm="animal">🐾 動物 (15)</button>
+      <button class="realm-btn" data-realm="plant">🌿 植物 (15)</button>
+      <button class="realm-btn" data-realm="microbe">🦠 微生物 (15)</button>
+      <button class="realm-btn" data-realm="legendary" style="color:var(--legend);">✨ 限定傳奇 (9)</button>
+    </div>
+    <div style="width: 40px;"></div>
+  </div>
+
+  <div class="container">
+    <!-- 90秒全生物預覽倒數提醒列 -->
+    <div class="demo-countdown-bar" id="demo-banner">
+      ✨ 全生物快閃展示中：剩餘 <span id="demo-sec">90</span> 秒（保留原有生物與閱讀時數，倒數結束後僅移除快閃生物）
+    </div>
+
+    <!-- 1. 專注計時 -->
+    <section id="view-timer">
+      <div class="tag-pills">
+        <span class="tag-pill active" data-tag="學習閱讀">📚 學習閱讀</span>
+        <span class="tag-pill" data-tag="工作專案">💻 工作專案</span>
+        <span class="tag-pill" data-tag="健康運動">🏃 健康運動</span>
+        <span class="tag-pill" data-tag="冥想沉澱">🧘 冥想沉澱</span>
+        <span class="tag-pill" id="custom-tag-btn">＋ 自訂標籤</span>
+      </div>
+
+      <div class="card" style="margin-top: 8px;">
+        <div class="panic-banner" id="panic-banner">
+          ⚠️ 專注完成！請在 <span id="grace-sec" style="font-size:1.15rem;">180</span> 秒內點擊採收，逾時小生命將枯萎死亡！
+        </div>
+
+        <div class="target-bar">
+          <span style="font-size:0.84rem; color:var(--text-muted); font-weight:700;">目前培育：</span>
+          <button class="target-btn" id="target-picker-btn">🐾 刺蝟 (點此更換物種)</button>
+        </div>
+
+        <!-- 五階段進化指示器 -->
+        <div class="evo-stage-bar">
+          <span id="evo-stage-text">階段 1/5：初生期 (0%)</span>
+          <div class="evo-dots">
+            <span class="evo-dot active" id="edot-1"></span>
+            <span class="evo-dot" id="edot-2"></span>
+            <span class="evo-dot" id="edot-3"></span>
+            <span class="evo-dot" id="edot-4"></span>
+            <span class="evo-dot" id="edot-5"></span>
+          </div>
+        </div>
+
+        <div class="viewport" id="viewport"></div>
+
+        <div class="timer-display" id="time-text">25:00</div>
+        <div class="status-hint" id="status-hint">共 5 個進化階段：每完成 1/4 時間進階一次，100% 達成最終完全體！</div>
+
+        <div class="time-selector" id="timer-presets">
+          <button class="time-btn" data-m="15">專注 15m</button>
+          <button class="time-btn active" data-m="25">專注 25m</button>
+          <button class="time-btn" data-m="45">專注 45m</button>
+          <button class="time-btn" data-m="custom">自訂時長</button>
+          <button class="time-btn" data-m="break" style="background:#FFF3CD; color:#795548;">☕ 休息 5m</button>
+          <button class="time-btn" data-m="test8s" id="btn-test-8s" style="background:#E0AAFF; color:#4A148C; display:none;">⚡ 8秒五階測試</button>
+        </div>
+
+        <div class="controls-row">
+          <button class="btn btn-start" id="btn-toggle">開始專注</button>
+          <button class="btn btn-giveup" id="btn-giveup" style="display:none;">放棄</button>
+        </div>
+
+        <div class="sound-bar">
+          <div class="sound-row">
+            <label style="font-weight:800; cursor:pointer;"><input type="checkbox" id="chk-sound" checked> 🎧 環境白噪音</label>
+            <select class="sound-select" id="sound-type">
+              <option value="fire">🪵 壁爐營火 (溫暖木柴悶燒與啪搭聲)</option>
+              <option value="wave">🌊 潮汐海浪 (規律慢速浪潮湧退)</option>
+              <option value="rain">🌧️ 深林落雨 (雨幕與清脆水珠滴答)</option>
+              <option value="breeze">🍃 山谷微風 (柔和動態氣流)</option>
+            </select>
+          </div>
+          <div class="sound-row">
+            <span>音量調整：<input type="range" class="volume-slider" id="vol-slider" min="0" max="1" step="0.05" value="0.45"></span>
+            <label style="font-weight:700; cursor:pointer;"><input type="checkbox" id="chk-penalty" checked> ⚡ 逾時未收成懲罰</label>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. 生態仙境（單一完整風景畫設計，點入立即漫步） -->
+    <section id="view-habitat" style="display:none;">
+      <div class="sub-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
+          <div>
+            <strong style="color:var(--primary-dark); font-size:1.15rem;">🏝️ 浮空棲息仙境島嶼</strong>
+            <p style="font-size:0.78rem; color:var(--text-muted);">微生物翱翔晴空、陸生動植物漫步浮空草坡、水生精靈悠游珊瑚海灣</p>
+          </div>
+          <div class="filter-tabs" style="margin-bottom:0;" id="habitat-timespan">
+            <button class="f-btn active" data-span="today">今日</button>
+            <button class="f-btn" data-span="week">本週</button>
+            <button class="f-btn" data-span="month">本月</button>
+            <button class="f-btn" data-span="year">全年度</button>
+          </div>
+        </div>
+
+        <div class="sanctuary-scenic-canvas">
+          <svg class="scenic-bg-svg" viewBox="0 0 800 500" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#8ECAE6"/>
+                <stop offset="45%" stop-color="#CAF0F8"/>
+                <stop offset="75%" stop-color="#FFF3B0"/>
+                <stop offset="100%" stop-color="#48CAE4"/>
+              </linearGradient>
+              <linearGradient id="islandGrass" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#95D5B2"/>
+                <stop offset="55%" stop-color="#52B788"/>
+                <stop offset="100%" stop-color="#40916C"/>
+              </linearGradient>
+              <linearGradient id="cliffRock" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#B08968"/>
+                <stop offset="100%" stop-color="#7F5539"/>
+              </linearGradient>
+              <linearGradient id="oceanGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#48CAE4"/>
+                <stop offset="45%" stop-color="#0096C7"/>
+                <stop offset="100%" stop-color="#023E8A"/>
+              </linearGradient>
+            </defs>
+
+            <rect width="800" height="500" fill="url(#skyGrad)"/>
+            <circle cx="680" cy="85" r="42" fill="#FFE5B4" opacity="0.85"/>
+            <g fill="#FFFFFF" opacity="0.82">
+              <ellipse cx="140" cy="70" rx="55" ry="20"/>
+              <ellipse cx="170" cy="60" rx="40" ry="22"/>
+              <ellipse cx="460" cy="55" rx="65" ry="22"/>
+              <ellipse cx="430" cy="45" rx="42" ry="20"/>
+            </g>
+
+            <path d="M40,260 Q140,160 250,260 Z" fill="#A8DADC" opacity="0.55"/>
+            <path d="M550,250 Q660,150 770,250 Z" fill="#A8DADC" opacity="0.5"/>
+
+            <path d="M70,245 Q400,335 730,245 L660,340 Q400,395 140,340 Z" fill="url(#cliffRock)" stroke="#4A3728" stroke-width="3"/>
+            <path d="M55,245 C65,155 240,135 400,140 C560,135 735,155 745,245 C730,310 560,335 400,335 C240,335 70,310 55,245 Z" fill="url(#islandGrass)" stroke="#4A3728" stroke-width="3.5"/>
+            <g stroke="#4A3728" stroke-width="2.5">
+              <rect x="145" y="145" width="10" height="22" fill="#7F5539"/>
+              <circle cx="150" cy="135" r="22" fill="#52B788"/>
+              <circle cx="138" cy="142" r="15" fill="#74C69D"/>
+              <rect x="635" y="150" width="10" height="22" fill="#7F5539"/>
+              <circle cx="640" cy="140" r="20" fill="#52B788"/>
+              <circle cx="652" cy="146" r="14" fill="#74C69D"/>
+            </g>
+
+            <path d="M0,355 Q200,335 400,355 T800,355 L800,500 L0,500 Z" fill="url(#oceanGrad)" stroke="#4A3728" stroke-width="3"/>
+            <path d="M80,395 Q130,385 180,395 M480,415 Q540,405 600,415 M260,445 Q320,435 380,445" fill="none" stroke="#90E0EF" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+            <path d="M60,500 Q65,465 50,455 M60,500 Q75,470 85,465" fill="none" stroke="#FF8FA3" stroke-width="5" stroke-linecap="round" opacity="0.7"/>
+            <path d="M720,500 Q715,465 700,455 M720,500 Q735,470 745,460" fill="none" stroke="#FFB703" stroke-width="5" stroke-linecap="round" opacity="0.7"/>
+          </svg>
+
+          <div class="scenic-entities-layer" id="scenic-entities"></div>
+        </div>
+
+        <div style="margin-top:14px; font-size:0.88rem; color:var(--wood); display:flex; justify-content:space-between; font-weight:700;">
+          <span>仙境居民總數：<strong id="span-count" style="color:var(--primary-dark); font-size:1.05rem;">0</strong> 隻</span>
+          <span>實際累積專注：<strong id="span-mins" style="color:var(--primary-dark); font-size:1.05rem;">0</strong> 分鐘</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. 物種圖鑑（單一分類列，總數包含限定傳奇共 54 種） -->
+    <section id="view-pokedex" style="display:none;">
+      <div class="sub-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+          <strong style="color:var(--primary-dark); font-size:1.15rem;">📖 三界物種圖鑑</strong>
+          <span style="font-size:0.86rem; color:var(--primary-dark); font-weight:800;" id="pokedex-stats">已解鎖: 0/54</span>
+        </div>
+        <div class="filter-tabs" id="pokedex-tabs">
+          <button class="f-btn active" data-pcat="all">全部 (54)</button>
+          <button class="f-btn" data-pcat="animal">🐾 動物 (15)</button>
+          <button class="f-btn" data-pcat="plant">🌿 植物 (15)</button>
+          <button class="f-btn" data-pcat="microbe">🦠 微生物 (15)</button>
+          <button class="f-btn" data-pcat="legendary" style="background:#FAF5FF; color:var(--legend); border:1.5px solid #D8B4E2;">✨ 限定傳奇 (9)</button>
+        </div>
+        <div class="grid-pokedex" id="pokedex-grid"></div>
+      </div>
+    </section>
+
+    <!-- 4. 專注日誌（依工作性質分類與多色區分統計） -->
+    <section id="view-journal" style="display:none;">
+      <div class="sub-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+          <strong style="color:var(--primary-dark); font-size:1.15rem;">📜 專注修煉日誌</strong>
+          <span style="font-size:0.82rem; color:var(--text-muted); font-weight:700;" id="journal-summary">共 0 筆紀錄</span>
+        </div>
+        <!-- 工作性質分類篩選列 -->
+        <div class="filter-tabs" id="journal-tabs">
+          <button class="f-btn active" data-jcat="all">全部紀錄</button>
+          <button class="f-btn" data-jcat="學習閱讀">📚 學習閱讀</button>
+          <button class="f-btn" data-jcat="工作專案">💻 工作專案</button>
+          <button class="f-btn" data-jcat="健康運動">🏃 健康運動</button>
+          <button class="f-btn" data-jcat="冥想沉澱">🧘 冥想沉澱</button>
+        </div>
+        <!-- 各工作性質累積時數彩色統計區 -->
+        <div id="journal-tag-stats" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;"></div>
+        <div id="journal-list" style="display:flex; flex-direction:column; gap:10px; max-height:420px; overflow-y:auto;"></div>
+      </div>
+    </section>
+
+    <!-- 5. 好友戰績交換：免帳號、無伺服器，可用連結或代碼匯入 -->
+    <section id="view-social" style="display:none;">
+      <div class="sub-card">
+        <strong style="color:var(--primary-dark); font-size:1.15rem;">⚔️ 好友專注排行榜與對決</strong>
+        <p style="font-size:.79rem; color:var(--text-muted); margin:8px 0 12px; line-height:1.7;">分享個人戰績連結，或讓好友互傳戰績代碼。這是<strong>手動更新的好友排行榜</strong>，並非即時連線；好友有新成績時須重新分享。</p>
+        <div class="pk-box" style="margin-bottom:16px;">
+          <label for="social-name" style="font-size:.86rem; font-weight:800;">👤 我的顯示暱稱</label>
+          <input id="social-name" class="pk-input" maxlength="24" placeholder="輸入想給朋友看到的名字" autocomplete="nickname">
+          <div id="invite-badge" class="slot-badge" style="align-self:flex-start;">已交換好友戰績：0 / 5 位</div>
+          <div style="font-size:.8rem; color:var(--text-muted);">🐉 交換 5 位不同好友的真實戰績即可解鎖【星穹聖龍】。單純複製邀請連結不會計數。</div>
+          <div class="social-action-row">
+            <button class="btn btn-start" id="btn-invite-friend" style="font-size:.85rem; padding:10px 12px;">💌 分享邀請連結</button>
+            <button class="btn btn-start" id="btn-copy-link" style="font-size:.85rem; padding:10px 12px;">🔗 複製連結</button>
+            <button class="btn btn-pause" id="btn-copy-pk" style="font-size:.85rem; padding:10px 12px;">📋 複製戰績代碼</button>
+          </div>
+          <p id="social-share-hint" style="font-size:.76rem; line-height:1.7; color:var(--text-muted);"></p>
+          <label for="my-pk-code" style="font-weight:800; font-size:.83rem;">我的戰績代碼（可直接複製貼給朋友）</label>
+          <div class="social-code-row"><input id="my-pk-code" class="pk-input" readonly aria-label="我的戰績代碼"></div>
+          <label for="friend-pk-input" style="font-weight:800; font-size:.84rem;">📥 匯入好友分享的網址或戰績代碼</label>
+          <textarea id="friend-pk-input" class="pk-input" rows="3" placeholder="貼上好友傳來的森境邀請網址或完整戰績代碼" style="resize:vertical; font-family:inherit;"></textarea>
+          <button class="btn btn-start" id="btn-run-pk" style="width:100%;max-width:none;">⚡ 匯入 / 更新好友戰績並對決</button>
+          <div id="pk-result-box" role="status" style="display:none; padding:12px; border-radius:12px; background:#FFF8F0; border:1px solid #F4A261; font-size:.84rem; line-height:1.6;"></div>
+        </div>
+        <strong style="color:var(--primary-dark);">🏆 好友排行榜（本機保存）</strong>
+        <div class="rank-list" id="leaderboard-list" style="margin-top:12px;"></div>
+        <button class="btn btn-giveup" id="btn-clear-friends" style="font-size:.78rem; padding:8px 12px;">清除匯入的好友戰績</button>
+      </div>
+    </section>
+
+    <!-- 6. 系統設定 -->
+    <section id="view-settings" style="display:none;">
+      <div class="sub-card">
+        <strong style="color:var(--primary-dark); font-size:1.15rem; display:block; margin-bottom:16px;">⚙️ 系統偏好與測試設定</strong>
+        <div class="settings-group">
+          <div class="setting-item">
+            <div>
+              <div>🎨 介面主題配色</div>
+              <div class="setting-desc">切換喜愛的視覺色調</div>
+            </div>
+            <select class="sound-select" id="setting-theme">
+              <option value="default">🌿 森系鼠尾草綠</option>
+              <option value="theme-apricot">🥨 暖陽奶油杏色</option>
+              <option value="theme-sakura">🌸 櫻花粉霧色系</option>
+              <option value="theme-ocean">🌊 靜謐湖海藍調</option>
+            </select>
+          </div>
+
+          <div class="setting-item">
+            <div>
+              <div>⏱️ 逾時採收寬限秒數</div>
+              <div class="setting-desc">計時結束後必須在此秒數內按下採收，逾時該物種會枯萎死掉</div>
+            </div>
+            <select class="sound-select" id="setting-grace-sec">
+              <option value="60">60 秒 (嚴格)</option>
+              <option value="180" selected>180 秒 (標準 3 分鐘)</option>
+              <option value="300">300 秒 (寬鬆 5 分鐘)</option>
+            </select>
+          </div>
+
+          <div class="setting-item">
+            <div>
+              <div>🏷️ 顯示仙境島嶼名稱標籤</div>
+              <div class="setting-desc">在生態仙境中顯示每隻生物下方的名字</div>
+            </div>
+            <input type="checkbox" id="setting-show-tags" checked style="width:20px; height:20px; accent-color:var(--primary);">
+          </div>
+
+          <div class="setting-item">
+            <div>
+              <div>⚡ 開啟「8秒五階段進化極速測試鈕」</div>
+              <div class="setting-desc">在計時頁顯示 8 秒測試鈕（0s/2s/4s/6s/8s 依序體驗 5 階段餵食照料進化與灑花）</div>
+            </div>
+            <input type="checkbox" id="setting-test-mode" style="width:20px; height:20px; accent-color:var(--primary);">
+          </div>
+
+          <div class="setting-item">
+            <div>
+              <div>🌟 90秒快閃體驗：僅預覽全 54 種生物</div>
+              <div class="setting-desc">於仙境與圖鑑預覽全物種 90 秒（僅供視覺預覽，不會解鎖計時器中的傳奇培育權限）</div>
+            </div>
+            <button class="btn btn-start" id="btn-unlock-demo" style="padding:8px 14px; font-size:0.8rem; max-width:155px;">啟動 90 秒展示</button>
+          </div>
+
+          <div class="setting-item">
+            <div>
+              <div>🗑️ 重置並清空所有紀錄</div>
+              <div class="setting-desc">清除這台裝置的島嶼、日誌與好友戰績（不同裝置資料不會自動同步）</div>
+            </div>
+            <button class="btn btn-giveup" id="btn-clear-all" style="padding:8px 14px; font-size:0.8rem;">清空所有資料</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<!-- 物種挑選彈窗（顯示各物種專屬剛出生第 1 階段樣貌） -->
+<div class="modal-overlay" id="picker-modal">
+  <div class="modal-box">
+    <strong style="color:var(--primary-dark); font-size:1.15rem;" id="picker-title">挑選培育物種</strong>
+    <p style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;">每一種生物皆顯示專屬「階段 1 初生樣貌」，隨專注每 1/4 時間進化！</p>
+    <div class="select-grid" id="picker-grid"></div>
+    <button class="btn btn-giveup" style="padding:8px 18px; font-size:0.84rem;" id="close-picker-btn">關閉視窗</button>
+  </div>
+</div>
+
+<!-- 成年恭喜完成與收成彈窗 -->
+<div class="modal-overlay" id="finish-modal">
+  <div class="modal-box">
+    <div style="font-size: 1.75rem; font-weight:800; color:var(--primary-dark); margin-bottom: 4px;">🎉 恭喜完成專注！ 🎉</div>
+    <div id="adult-reveal-box" style="width:170px; height:170px; margin: 0 auto 8px auto;"></div>
+    <h3 id="finish-title" style="color:var(--primary-dark); margin-bottom: 6px;">成功進化至完全體！</h3>
+    <p id="finish-desc" style="font-size:0.85rem; color:var(--text-muted); margin-bottom: 12px;"></p>
+    <div id="modal-grace-warn" style="display:none; background:#FFE8E8; color:var(--danger); padding:8px; border-radius:10px; font-size:0.8rem; font-weight:800; margin-bottom:12px;">
+      ⏰ 請在 <span id="modal-grace-sec">180</span> 秒內點擊下方按鈕收成，逾時將會枯萎死掉喔！
+    </div>
+    <button class="btn btn-start" style="width:100%; max-width:none;" id="finish-confirm-btn">🌾 立即採收送入生態仙境</button>
+  </div>
+</div>
+
+<!-- 自訂通用訊息／確認／輸入彈窗 -->
+<div class="modal-overlay" id="custom-dialog-modal">
+  <div class="modal-box" style="max-width: 390px;">
+    <h3 id="dialog-title" style="color:var(--primary-dark); margin-bottom: 10px; font-size:1.15rem;">系統提示</h3>
+    <p id="dialog-msg" style="font-size:0.9rem; color:var(--text-main); margin-bottom: 16px; line-height:1.5; white-space:pre-line;"></p>
+    <div id="dialog-input-wrap" style="display:none; margin-bottom: 16px;">
+      <input type="text" id="dialog-input" class="pk-input" style="text-align:center; font-size:0.95rem;" />
+    </div>
+    <div style="display:flex; gap:10px; justify-content:center;">
+      <button class="btn btn-giveup" id="dialog-cancel-btn" style="padding:9px 20px; font-size:0.88rem; display:none;">取消</button>
+      <button class="btn btn-start" id="dialog-ok-btn" style="padding:9px 24px; font-size:0.88rem; max-width:150px;">確定</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ══════════════════════════════════════════════════════════════════════
+  // 自訂對話框與剪貼簿工具 (避免瀏覽器 iframe 阻擋原生彈窗)
+  // ══════════════════════════════════════════════════════════════════════
+  const dialogModal = document.getElementById('custom-dialog-modal');
+  const dialogTitle = document.getElementById('dialog-title');
+  const dialogMsg = document.getElementById('dialog-msg');
+  const dialogInputWrap = document.getElementById('dialog-input-wrap');
+  const dialogInput = document.getElementById('dialog-input');
+  const dialogCancelBtn = document.getElementById('dialog-cancel-btn');
+  const dialogOkBtn = document.getElementById('dialog-ok-btn');
+
+  function showNotice(message, title = '🌱 森境提示') {
+    return new Promise((resolve) => {
+      dialogTitle.textContent = title;
+      dialogMsg.textContent = message;
+      dialogInputWrap.style.display = 'none';
+      dialogCancelBtn.style.display = 'none';
+      dialogModal.style.display = 'flex';
+
+      const onOk = () => {
+        cleanup();
+        resolve(true);
+      };
+      const cleanup = () => {
+        dialogModal.style.display = 'none';
+        dialogOkBtn.removeEventListener('click', onOk);
+      };
+      dialogOkBtn.addEventListener('click', onOk);
+    });
+  }
+
+  function showConfirmModal(message, title = '⚠️ 確認操作') {
+    return new Promise((resolve) => {
+      dialogTitle.textContent = title;
+      dialogMsg.textContent = message;
+      dialogInputWrap.style.display = 'none';
+      dialogCancelBtn.style.display = 'inline-block';
+      dialogModal.style.display = 'flex';
+
+      const onOk = () => { cleanup(); resolve(true); };
+      const onCancel = () => { cleanup(); resolve(false); };
+      const cleanup = () => {
+        dialogModal.style.display = 'none';
+        dialogOkBtn.removeEventListener('click', onOk);
+        dialogCancelBtn.removeEventListener('click', onCancel);
+      };
+      dialogOkBtn.addEventListener('click', onOk);
+      dialogCancelBtn.addEventListener('click', onCancel);
+    });
+  }
+
+  function showPromptModal(message, defaultVal = '', title = '✏️ 輸入內容') {
+    return new Promise((resolve) => {
+      dialogTitle.textContent = title;
+      dialogMsg.textContent = message;
+      dialogInputWrap.style.display = 'block';
+      dialogInput.value = defaultVal;
+      dialogCancelBtn.style.display = 'inline-block';
+      dialogModal.style.display = 'flex';
+      setTimeout(() => dialogInput.focus(), 50);
+
+      const onOk = () => { const v = dialogInput.value.trim(); cleanup(); resolve(v); };
+      const onCancel = () => { cleanup(); resolve(null); };
+      const cleanup = () => {
+        dialogModal.style.display = 'none';
+        dialogOkBtn.removeEventListener('click', onOk);
+        dialogCancelBtn.removeEventListener('click', onCancel);
+      };
+      dialogOkBtn.addEventListener('click', onOk);
+      dialogCancelBtn.addEventListener('click', onCancel);
+    });
+  }
+
+  async function copyTextSafe(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      try { await navigator.clipboard.writeText(text); return true; } catch (e) {}
+    }
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0;';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length);
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    ta.remove();
+    if (!ok) {
+      // Mobile browsers often block copy on file:// or preview iframes.
+      await showNotice('瀏覽器限制自動複製，請長按或選取「我的戰績代碼」欄位手動複製。');
+    }
+    return ok;
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // 日系手繪插畫風向量引擎 (完全保留所有生物可愛圖片，並為每隻生物打造專屬 4 階段與專屬死掉外貌)
+  // ══════════════════════════════════════════════════════════════════════
+  const S = `stroke="#4A3728" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"`;
+  const S2 = `stroke="#4A3728" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"`;
+
+  function kawaiiEyes(x1, x2, y, r = 4.2) {
+    return `
+      <circle cx="${x1}" cy="${y}" r="${r}" fill="#2B1E16"/>
+      <circle cx="${x1 - r*0.32}" cy="${y - r*0.32}" r="${r*0.38}" fill="#FFFFFF"/>
+      <circle cx="${x1 + r*0.28}" cy="${y + r*0.28}" r="${r*0.18}" fill="#FFFFFF"/>
+      <circle cx="${x2}" cy="${y}" r="${r}" fill="#2B1E16"/>
+      <circle cx="${x2 - r*0.32}" cy="${y - r*0.32}" r="${r*0.38}" fill="#FFFFFF"/>
+      <circle cx="${x2 + r*0.28}" cy="${y + r*0.28}" r="${r*0.18}" fill="#FFFFFF"/>
+      <ellipse cx="${x1 - r*1.3}" cy="${y + r*1.1}" rx="${r*0.95}" ry="${r*0.55}" fill="#FF8FA3" opacity="0.65"/>
+      <ellipse cx="${x2 + r*1.3}" cy="${y + r*1.1}" rx="${r*0.95}" ry="${r*0.55}" fill="#FF8FA3" opacity="0.65"/>
+    `;
+  }
+
+  function wMouth(x, y) {
+    return `<path d="M${x-5},${y} Q${x-2.5},${y+3.5} ${x},${y} Q${x+2.5},${y+3.5} ${x+5},${y}" fill="none" ${S2}/>`;
+  }
+
+  function smileMouth(x, y) {
+    return `<path d="M${x-4.5},${y} Q${x},${y+4.5} ${x+4.5},${y}" fill="none" ${S2}/>`;
+  }
+
+  function potBase() {
+    return `
+      <polygon points="33,74 87,74 80,106 40,106" fill="#D98A6C" ${S}/>
+      <rect x="29" y="66" width="62" height="9" rx="4" fill="#E69F83" ${S}/>
+      <ellipse cx="60" cy="74" rx="24" ry="4" fill="#6F4E37"/>
+    `;
+  }
+
+  // ── 45 種常規物種資料庫 (全數標記 alive-face 與精準五官座標 face，確保無表情階段與死亡表情完美替換) ──
+  const DATABASE = [
+    // ═══════════════ 【動物界 15 種】 ═══════════════
+    { id: 'a_hedgehog', realm: 'animal', name: '刺蝟', habitat: 'land', babyType: 'pacifier', mainColor: '#7F5539', subColor: '#FFF8F0',
+      face: { x1: 47, x2: 73, y: 60, my: 69, r: 4.5 },
+      svg: `<g>
+        <path d="M60,16 L68,23 L78,19 L82,29 L93,29 L92,40 L101,46 L96,57 L102,67 L93,76 L95,86 L84,91 L60,94 L36,91 L25,86 L27,76 L18,67 L24,57 L19,46 L28,40 L27,29 L38,29 L42,19 L52,23 Z" fill="#7F5539" ${S}/>
+        <path d="M60,22 L66,28 L75,25 L78,34 L87,35 L86,44 L93,50 L89,59 L93,68 L85,76 L35,76 L27,68 L31,59 L27,50 L34,44 L33,35 L42,34 L45,25 L54,28 Z" fill="#9C6644"/>
+        <circle cx="35" cy="48" r="8" fill="#E6CCB2" ${S}/>
+        <circle cx="35" cy="48" r="4" fill="#FFCCD5"/>
+        <circle cx="85" cy="48" r="8" fill="#E6CCB2" ${S}/>
+        <circle cx="85" cy="48" r="4" fill="#FFCCD5"/>
+        <path d="M34,62 C34,42 86,42 86,62 C88,82 78,96 60,96 C42,96 32,82 34,62 Z" fill="#FFF8F0" ${S}/>
+        <g class="alive-face">
+          ${kawaiiEyes(47, 73, 60, 4.5)}
+          <ellipse cx="60" cy="64" rx="4" ry="3" fill="#4A3728"/>
+          ${wMouth(60, 69)}
+        </g>
+        <ellipse cx="45" cy="79" rx="5" ry="3.5" fill="#F5EBE0" ${S2}/>
+        <ellipse cx="75" cy="79" rx="5" ry="3.5" fill="#F5EBE0" ${S2}/>
+        <ellipse cx="46" cy="96" rx="6.5" ry="4" fill="#FFCCD5" ${S}/>
+        <ellipse cx="74" cy="96" rx="6.5" ry="4" fill="#FFCCD5" ${S}/>
+      </g>`
+    },
+    { id: 'a_meerkat', realm: 'animal', name: '狐獴', habitat: 'land', babyType: 'pacifier', mainColor: '#E0A96D', subColor: '#FAEDCD',
+      face: { x1: 47, x2: 73, y: 45, my: 55, r: 4.5 },
+      svg: `<g>
+        <path d="M74,88 Q96,86 98,70 Q94,65 88,74 Q82,82 72,82" fill="#C68B59" ${S}/>
+        <path d="M93,75 Q98,70 96,67" stroke="#4A3728" stroke-width="4" stroke-linecap="round"/>
+        <path d="M40,62 C38,80 38,98 44,102 L76,102 C82,98 82,80 80,62 Z" fill="#D4A373" ${S}/>
+        <ellipse cx="60" cy="82" rx="13" ry="15" fill="#FAEDCD"/>
+        <circle cx="32" cy="44" r="7" fill="#6F4E37" ${S}/>
+        <circle cx="88" cy="44" r="7" fill="#6F4E37" ${S}/>
+        <ellipse cx="60" cy="45" rx="26" ry="21" fill="#E0A96D" ${S}/>
+        <ellipse cx="47" cy="45" rx="7.5" ry="6.5" fill="#8D5B4C"/>
+        <ellipse cx="73" cy="45" rx="7.5" ry="6.5" fill="#8D5B4C"/>
+        <ellipse cx="60" cy="52" rx="8" ry="6" fill="#FAEDCD"/>
+        <g class="alive-face">
+          ${kawaiiEyes(47, 73, 45, 4.5)}
+          <polygon points="57,49 63,49 60,53" fill="#4A3728"/>
+          ${wMouth(60, 55)}
+        </g>
+        <path d="M44,68 Q53,74 56,74" fill="none" stroke="#D4A373" stroke-width="7" stroke-linecap="round"/>
+        <path d="M44,68 Q53,74 56,74" fill="none" ${S}/>
+        <path d="M76,68 Q67,74 64,74" fill="none" stroke="#D4A373" stroke-width="7" stroke-linecap="round"/>
+        <path d="M76,68 Q67,74 64,74" fill="none" ${S}/>
+        <ellipse cx="48" cy="103" rx="7" ry="3.5" fill="#C68B59" ${S}/>
+        <ellipse cx="72" cy="103" rx="7" ry="3.5" fill="#C68B59" ${S}/>
+      </g>`
+    },
+    { id: 'a_capybara', realm: 'animal', name: '水豚', habitat: 'land', babyType: 'pacifier', mainColor: '#C68B59', subColor: '#8D5B4C',
+      face: { x1: 45, x2: 75, y: 43, my: 59, r: 4.2 },
+      svg: `<g>
+        <path d="M32,64 C26,82 32,102 44,102 L76,102 C88,102 94,82 88,64 Z" fill="#B57C56" ${S}/>
+        <ellipse cx="38" cy="30" rx="6" ry="5" fill="#7F4F24" ${S}/>
+        <ellipse cx="82" cy="30" rx="6" ry="5" fill="#7F4F24" ${S}/>
+        <rect x="30" y="28" width="60" height="44" rx="22" fill="#C68B59" ${S}/>
+        <ellipse cx="60" cy="54" rx="14" ry="11" fill="#8D5B4C" ${S2}/>
+        <circle cx="55" cy="50" r="2" fill="#3D2B1F"/>
+        <circle cx="65" cy="50" r="2" fill="#3D2B1F"/>
+        <g class="alive-face">
+          <line x1="60" y1="53" x2="60" y2="59" ${S2}/>
+          ${wMouth(60, 59)}
+          <path d="M40,44 Q45,40 50,44" fill="none" stroke="#3D2B1F" stroke-width="3.2" stroke-linecap="round"/>
+          <path d="M70,44 Q75,40 80,44" fill="none" stroke="#3D2B1F" stroke-width="3.2" stroke-linecap="round"/>
+          <ellipse cx="39" cy="50" rx="4.5" ry="2.5" fill="#FF8FA3" opacity="0.6"/>
+          <ellipse cx="81" cy="50" rx="4.5" ry="2.5" fill="#FF8FA3" opacity="0.6"/>
+        </g>
+        <circle cx="60" cy="20" r="8" fill="#FF8811" ${S}/>
+        <ellipse cx="64" cy="12" rx="4" ry="2" fill="#52B788" transform="rotate(20 64 12)"/>
+        <ellipse cx="46" cy="102" rx="6.5" ry="3.5" fill="#8D5B4C" ${S}/>
+        <ellipse cx="74" cy="102" rx="6.5" ry="3.5" fill="#8D5B4C" ${S}/>
+      </g>`
+    },
+    { id: 'a_otter', realm: 'animal', name: '海獺', habitat: 'water', babyType: 'pacifier', mainColor: '#9C7152', subColor: '#FFF8F0',
+      face: { x1: 46, x2: 74, y: 43, my: 52, r: 4.3 },
+      svg: `<g>
+        <ellipse cx="60" cy="76" rx="28" ry="24" fill="#8D6346" ${S}/>
+        <ellipse cx="60" cy="78" rx="18" ry="16" fill="#F3E3D3"/>
+        <circle cx="34" cy="38" r="6" fill="#8D6346" ${S}/>
+        <circle cx="86" cy="38" r="6" fill="#8D6346" ${S}/>
+        <ellipse cx="60" cy="44" rx="25" ry="21" fill="#9C7152" ${S}/>
+        <ellipse cx="53" cy="51" rx="8" ry="6" fill="#FFF8F0"/>
+        <ellipse cx="67" cy="51" rx="8" ry="6" fill="#FFF8F0"/>
+        <g class="alive-face">
+          ${kawaiiEyes(46, 74, 43, 4.3)}
+          <polygon points="56,46 64,46 60,51" fill="#3D2B1F" ${S2}/>
+          ${wMouth(60, 52)}
+        </g>
+        <path d="M48,78 C48,66 72,66 72,78 L66,85 L54,85 Z" fill="#FF8FA3" ${S}/>
+        <ellipse cx="46" cy="76" rx="6" ry="4" fill="#6F4E37" ${S}/>
+        <ellipse cx="74" cy="76" rx="6" ry="4" fill="#6F4E37" ${S}/>
+      </g>`
+    },
+    { id: 'a_penguin', realm: 'animal', name: '企鵝', habitat: 'water', babyType: 'egg_hatch', mainColor: '#3D405B', subColor: '#FFB703',
+      face: { x1: 47, x2: 73, y: 52, my: 58, r: 4.5 },
+      svg: `<g>
+        <ellipse cx="26" cy="68" rx="7" ry="16" fill="#3D405B" transform="rotate(25 26 68)" ${S}/>
+        <ellipse cx="94" cy="68" rx="7" ry="16" fill="#3D405B" transform="rotate(-25 94 68)" ${S}/>
+        <path d="M32,52 C32,24 88,24 88,52 C92,80 86,100 60,100 C34,100 28,80 32,52 Z" fill="#3D405B" ${S}/>
+        <path d="M60,46 C52,36 37,40 37,54 C37,65 36,95 60,95 C84,95 83,65 83,54 C83,40 68,36 60,46 Z" fill="#FFFFFF"/>
+        <ellipse cx="60" cy="56" rx="6" ry="4" fill="#FFB703" ${S2}/>
+        <g class="alive-face">
+          ${kawaiiEyes(47, 73, 52, 4.5)}
+        </g>
+        <ellipse cx="46" cy="100" rx="7.5" ry="4" fill="#FFB703" ${S}/>
+        <ellipse cx="74" cy="100" rx="7.5" ry="4" fill="#FFB703" ${S}/>
+      </g>`
+    },
+    { id: 'a_jellyfish', realm: 'animal', name: '水母', habitat: 'water', babyType: 'water_larva', mainColor: '#90E0EF', subColor: '#FF8FA3',
+      face: { x1: 46, x2: 74, y: 48, my: 53, r: 4.3 },
+      svg: `<g>
+        <path d="M38,66 Q32,84 40,102" fill="none" stroke="#48CAE4" stroke-width="4" stroke-linecap="round"/>
+        <path d="M50,68 Q46,86 52,105" fill="none" stroke="#FF8FA3" stroke-width="4.5" stroke-linecap="round"/>
+        <path d="M70,68 Q74,86 68,105" fill="none" stroke="#FF8FA3" stroke-width="4.5" stroke-linecap="round"/>
+        <path d="M82,66 Q88,84 80,102" fill="none" stroke="#48CAE4" stroke-width="4" stroke-linecap="round"/>
+        <path d="M24,58 C22,22 98,22 96,58 C90,66 80,66 74,59 C66,67 54,67 46,59 C40,66 30,66 24,58 Z" fill="#90E0EF" ${S}/>
+        <ellipse cx="45" cy="34" rx="10" ry="5" fill="#FFFFFF" opacity="0.55" transform="rotate(-20 45 34)"/>
+        <g class="alive-face">
+          ${kawaiiEyes(46, 74, 48, 4.3)}
+          ${smileMouth(60, 52)}
+        </g>
+      </g>`
+    },
+    { id: 'a_redpanda', realm: 'animal', name: '小熊貓', habitat: 'land', babyType: 'pacifier', mainColor: '#D96B43', subColor: '#FFFFFF',
+      face: { x1: 45, x2: 71, y: 46, my: 55, r: 4.4 },
+      svg: `<g>
+        <path d="M75,86 C104,90 110,58 92,52 C80,50 78,68 74,76" fill="#D96B43" ${S}/>
+        <path d="M90,56 Q98,64 94,72" fill="none" stroke="#5E3A24" stroke-width="5" stroke-linecap="round"/>
+        <path d="M82,68 Q90,76 85,82" fill="none" stroke="#5E3A24" stroke-width="5" stroke-linecap="round"/>
+        <ellipse cx="56" cy="80" rx="22" ry="18" fill="#5E3A24" ${S}/>
+        <ellipse cx="56" cy="76" rx="16" ry="13" fill="#D96B43"/>
+        <polygon points="26,42 30,18 48,28" fill="#FFFFFF" ${S}/>
+        <polygon points="90,42 86,18 68,28" fill="#FFFFFF" ${S}/>
+        <ellipse cx="58" cy="47" rx="27" ry="22" fill="#D96B43" ${S}/>
+        <ellipse cx="40" cy="53" rx="9" ry="7" fill="#FFFFFF"/>
+        <ellipse cx="76" cy="53" rx="9" ry="7" fill="#FFFFFF"/>
+        <ellipse cx="48" cy="36" rx="4" ry="2.5" fill="#FFFFFF"/>
+        <ellipse cx="68" cy="36" rx="4" ry="2.5" fill="#FFFFFF"/>
+        <ellipse cx="58" cy="54" rx="9" ry="7" fill="#FFFFFF" ${S2}/>
+        <g class="alive-face">
+          ${kawaiiEyes(45, 71, 46, 4.4)}
+          <circle cx="58" cy="51" r="3" fill="#2B1E16"/>
+          ${wMouth(58, 55)}
+        </g>
+      </g>`
+    },
+    { id: 'a_shiba', realm: 'animal', name: '柴犬', habitat: 'land', babyType: 'pacifier', mainColor: '#E69F52', subColor: '#FFFDF9',
+      face: { x1: 46, x2: 74, y: 44, my: 56, r: 4.5 },
+      svg: `<g>
+        <path d="M78,78 C98,74 96,52 82,58 C76,62 82,70 78,74" fill="#E69F52" ${S}/>
+        <path d="M38,65 L34,98 L86,98 L82,65 Z" fill="#E69F52" ${S}/>
+        <path d="M46,68 Q60,85 74,68 L72,98 L48,98 Z" fill="#FFFDF9"/>
+        <polygon points="30,38 34,14 50,28" fill="#E69F52" ${S}/>
+        <polygon points="34,34 36,20 46,29" fill="#FFFDF9"/>
+        <polygon points="90,38 86,14 70,28" fill="#E69F52" ${S}/>
+        <polygon points="86,34 84,20 74,29" fill="#FFFDF9"/>
+        <ellipse cx="60" cy="46" rx="28" ry="23" fill="#E69F52" ${S}/>
+        <path d="M33,48 C35,66 52,68 60,68 C68,68 85,66 87,48 C78,44 68,52 60,52 C52,52 42,44 33,48 Z" fill="#FFFDF9"/>
+        <ellipse cx="48" cy="34" rx="3.5" ry="2.2" fill="#FFFDF9"/>
+        <ellipse cx="72" cy="34" rx="3.5" ry="2.2" fill="#FFFDF9"/>
+        <g class="alive-face">
+          ${kawaiiEyes(46, 74, 44, 4.5)}
+          <polygon points="56,50 64,50 60,55" fill="#2B1E16"/>
+          <path d="M53,56 Q60,64 67,56 Z" fill="#FF758F" ${S2}/>
+        </g>
+      </g>`
+    },
+    { id: 'a_kiwi', realm: 'animal', name: '奇異鳥', habitat: 'land', babyType: 'egg_hatch', mainColor: '#9C6644', subColor: '#F4A261',
+      face: { x1: 50, x2: 68, y: 40, my: 47, r: 4.0 },
+      svg: `<g>
+        <line x1="48" y1="88" x2="44" y2="102" stroke="#E0A96D" stroke-width="4" stroke-linecap="round"/>
+        <line x1="68" y1="88" x2="72" y2="102" stroke="#E0A96D" stroke-width="4" stroke-linecap="round"/>
+        <ellipse cx="54" cy="68" rx="26" ry="23" fill="#7F5539" ${S}/>
+        <circle cx="58" cy="42" r="19" fill="#9C6644" ${S}/>
+        <path d="M68,44 Q94,50 102,68 Q90,56 66,50 Z" fill="#F4A261" ${S}/>
+        <g class="alive-face">
+          ${kawaiiEyes(50, 68, 40, 4)}
+        </g>
+      </g>`
+    },
+    { id: 'a_sloth', realm: 'animal', name: '樹懶', habitat: 'land', babyType: 'pacifier', mainColor: '#B8A394', subColor: '#6F4E37',
+      face: { x1: 46, x2: 74, y: 47, my: 57, r: 4.0 },
+      svg: `<g>
+        <ellipse cx="60" cy="76" rx="25" ry="22" fill="#A69080" ${S}/>
+        <ellipse cx="60" cy="46" rx="27" ry="22" fill="#B8A394" ${S}/>
+        <ellipse cx="60" cy="48" rx="22" ry="17" fill="#FFF8F0"/>
+        <ellipse cx="45" cy="48" rx="9" ry="6" fill="#6F4E37" transform="rotate(20 45 48)"/>
+        <ellipse cx="75" cy="48" rx="9" ry="6" fill="#6F4E37" transform="rotate(-20 75 48)"/>
+        <ellipse cx="60" cy="52" rx="4" ry="3" fill="#4A3728"/>
+        <g class="alive-face">
+          ${kawaiiEyes(46, 74, 47, 4)}
+          ${smileMouth(60, 57)}
+        </g>
+      </g>`
+    },
+    { id: 'a_whale', realm: 'animal', name: '抹香鯨', habitat: 'water', babyType: 'water_larva', mainColor: '#457B9D', subColor: '#90E0EF',
+      face: { x1: 38, x2: 54, y: 52, my: 58, r: 4.0 },
+      svg: `<g>
+        <path d="M52,26 Q48,12 38,16 M56,26 Q60,12 70,16" fill="none" stroke="#48CAE4" stroke-width="3.5" stroke-linecap="round"/>
+        <path d="M22,58 C20,30 55,28 74,38 C88,46 92,58 102,46 C104,58 98,70 86,68 C72,76 24,78 22,58 Z" fill="#457B9D" ${S}/>
+        <path d="M24,62 C36,62 66,64 78,68 C64,76 30,76 24,62 Z" fill="#F1FAEE" ${S2}/>
+        <g class="alive-face">
+          <circle cx="42" cy="52" r="4.2" fill="#1D3557"/>
+          <circle cx="40.5" cy="50.5" r="1.5" fill="#FFFFFF"/>
+          <ellipse cx="36" cy="57" rx="4" ry="2" fill="#FF8FA3" opacity="0.7"/>
+        </g>
+        <ellipse cx="56" cy="68" rx="8" ry="4" fill="#457B9D" transform="rotate(25 56 68)" ${S}/>
+      </g>`
+    },
+    { id: 'a_sugar', realm: 'animal', name: '蜜袋鼯', habitat: 'land', babyType: 'pacifier', mainColor: '#B8C4D0', subColor: '#FFFDF9',
+      face: { x1: 46, x2: 74, y: 45, my: 54, r: 5.2 },
+      svg: `<g>
+        <path d="M24,64 Q40,56 60,56 Q80,56 96,64 Q84,96 60,96 Q36,96 24,64 Z" fill="#9EABB8" ${S}/>
+        <ellipse cx="60" cy="78" rx="15" ry="15" fill="#FFFDF9"/>
+        <ellipse cx="32" cy="34" rx="10" ry="8" fill="#7D8CA3" transform="rotate(-25 32 34)" ${S}/>
+        <ellipse cx="88" cy="34" rx="10" ry="8" fill="#7D8CA3" transform="rotate(25 88 34)" ${S}/>
+        <ellipse cx="60" cy="44" rx="24" ry="20" fill="#B8C4D0" ${S}/>
+        <path d="M60,24 L60,44" stroke="#4A5568" stroke-width="5" stroke-linecap="round"/>
+        <g class="alive-face">
+          ${kawaiiEyes(46, 74, 45, 5.8)}
+          <polygon points="58,51 62,51 60,54" fill="#FF8FA3"/>
+        </g>
+      </g>`
+    },
+    { id: 'a_chameleon', realm: 'animal', name: '變色龍', habitat: 'land', babyType: 'egg_hatch', mainColor: '#52B788', subColor: '#74C69D',
+      face: { x1: 66, x2: 78, y: 46, my: 55, r: 3.8 },
+      svg: `<g>
+        <path d="M38,76 C18,78 14,56 28,54 C38,54 36,68 28,66" fill="none" stroke="#52B788" stroke-width="8" stroke-linecap="round"/>
+        <path d="M38,76 C18,78 14,56 28,54 C38,54 36,68 28,66" fill="none" ${S}/>
+        <path d="M34,74 C34,48 64,44 76,56 C78,76 58,86 34,74 Z" fill="#74C69D" ${S}/>
+        <path d="M56,46 C54,24 76,22 86,42 C92,52 84,64 68,62 Z" fill="#52B788" ${S}/>
+        <g class="alive-face">
+          <circle cx="74" cy="46" r="7" fill="#FFFDF9" ${S}/>
+          <circle cx="75" cy="46" r="3.5" fill="#2B1E16"/>
+          <circle cx="74" cy="44.5" r="1.2" fill="#FFFFFF"/>
+          <path d="M78,56 Q86,58 88,54" fill="none" ${S2}/>
+        </g>
+      </g>`
+    },
+    { id: 'a_bunny', realm: 'animal', name: '兔子', habitat: 'land', babyType: 'pacifier', mainColor: '#FFFDF9', subColor: '#FFCCD5',
+      face: { x1: 47, x2: 73, y: 48, my: 57, r: 4.5 },
+      svg: `<g>
+        <ellipse cx="28" cy="56" rx="8" ry="22" fill="#FFFDF9" transform="rotate(14 28 56)" ${S}/>
+        <ellipse cx="28" cy="58" rx="4" ry="14" fill="#FFCCD5" transform="rotate(14 28 58)"/>
+        <ellipse cx="92" cy="56" rx="8" ry="22" fill="#FFFDF9" transform="rotate(-14 92 56)" ${S}/>
+        <ellipse cx="92" cy="58" rx="4" ry="14" fill="#FFCCD5" transform="rotate(-14 92 58)"/>
+        <ellipse cx="60" cy="78" rx="22" ry="19" fill="#FFFDF9" ${S}/>
+        <ellipse cx="60" cy="48" rx="25" ry="21" fill="#FFFDF9" ${S}/>
+        <g class="alive-face">
+          ${kawaiiEyes(47, 73, 48, 4.5)}
+          <polygon points="57,52 63,52 60,56" fill="#FF8FA3"/>
+          ${wMouth(60, 57)}
+        </g>
+        <polygon points="52,74 72,82 56,90" fill="#FB8500" ${S2}/>
+      </g>`
+    },
+    { id: 'a_frog', realm: 'animal', name: '樹蛙', habitat: 'water', babyType: 'egg_hatch', mainColor: '#70E000', subColor: '#E63946',
+      face: { x1: 42, x2: 78, y: 40, my: 56, r: 5.0 },
+      svg: `<g>
+        <ellipse cx="60" cy="72" rx="26" ry="20" fill="#70E000" ${S}/>
+        <ellipse cx="60" cy="76" rx="18" ry="14" fill="#FFF3B0"/>
+        <circle cx="42" cy="40" r="11" fill="#70E000" ${S}/>
+        <circle cx="78" cy="40" r="11" fill="#70E000" ${S}/>
+        <ellipse cx="60" cy="54" rx="26" ry="16" fill="#70E000" ${S}/>
+        <g class="alive-face">
+          <circle cx="42" cy="40" r="7.5" fill="#E63946" ${S2}/>
+          <circle cx="42" cy="40" r="3.8" fill="#1A1110"/>
+          <circle cx="40" cy="38" r="1.6" fill="#FFFFFF"/>
+          <circle cx="78" cy="40" r="7.5" fill="#E63946" ${S2}/>
+          <circle cx="78" cy="40" r="3.8" fill="#1A1110"/>
+          <circle cx="76" cy="38" r="1.6" fill="#FFFFFF"/>
+          <path d="M48,55 Q60,62 72,55" fill="none" ${S}/>
+        </g>
+        <ellipse cx="42" cy="92" rx="7" ry="3.5" fill="#FF9F1C" ${S}/>
+        <ellipse cx="78" cy="92" rx="7" ry="3.5" fill="#FF9F1C" ${S}/>
+      </g>`
+    },
+
+    // ═══════════════ 【植物界 15 種】 ═══════════════
+    { id: 'p_sunflower', realm: 'plant', name: '向日葵', habitat: 'land', mainColor: '#FFB703', subColor: '#7F4F24',
+      face: { x1: 52, x2: 68, y: 37, my: 43, r: 3.4 },
+      svg: `<g>
+        <path d="M60,72 L60,48" stroke="#52B788" stroke-width="6" ${S}/>
+        <ellipse cx="44" cy="64" rx="11" ry="5" fill="#74C69D" transform="rotate(-25 44 64)" ${S}/>
+        <ellipse cx="76" cy="64" rx="11" ry="5" fill="#74C69D" transform="rotate(25 76 64)" ${S}/>
+        ${potBase()}
+        <g fill="#FFB703" ${S}>
+          <circle cx="60" cy="14" r="7"/><circle cx="60" cy="62" r="7"/>
+          <circle cx="36" cy="38" r="7"/><circle cx="84" cy="38" r="7"/>
+          <circle cx="43" cy="21" r="7"/><circle cx="77" cy="21" r="7"/>
+          <circle cx="43" cy="55" r="7"/><circle cx="77" cy="55" r="7"/>
+        </g>
+        <circle cx="60" cy="38" r="18" fill="#7F4F24" ${S}/>
+        <g class="alive-face">
+          ${kawaiiEyes(52, 68, 37, 3.2)}
+          <path d="M56,42 Q60,46 64,42" fill="none" stroke="#FFF" stroke-width="2.2" stroke-linecap="round"/>
+        </g>
+      </g>`
+    },
+    { id: 'p_strawberry', realm: 'plant', name: '草莓', habitat: 'land', mainColor: '#E63946', subColor: '#FFE5EC',
+      face: { x1: 49, x2: 71, y: 58, my: 64, r: 4.0 },
+      svg: `<g>
+        <path d="M44,32 C30,40 30,82 60,92 C90,82 90,40 76,32 Z" fill="#E63946" ${S}/>
+        <path d="M60,34 L42,24 L52,36 L60,20 L68,36 L78,24 Z" fill="#52B788" ${S}/>
+        <circle cx="44" cy="48" r="1.8" fill="#FFE5EC"/><circle cx="76" cy="48" r="1.8" fill="#FFE5EC"/>
+        <circle cx="50" cy="76" r="1.8" fill="#FFE5EC"/><circle cx="70" cy="76" r="1.8" fill="#FFE5EC"/>
+        <g class="alive-face">
+          ${kawaiiEyes(49, 71, 58, 4)}
+          ${smileMouth(60, 64)}
+        </g>
+      </g>`
+    },
+    { id: 'p_mushroom', realm: 'plant', name: '蘑菇', habitat: 'land', mainColor: '#E63946', subColor: '#FFF8F0',
+      face: { x1: 51, x2: 69, y: 76, my: 81, r: 3.8 },
+      svg: `<g>
+        <path d="M45,56 L40,94 C40,102 80,102 80,94 L75,56 Z" fill="#FFF8F0" ${S}/>
+        <path d="M20,58 C18,18 102,18 100,58 C80,64 40,64 20,58 Z" fill="#E63946" ${S}/>
+        <circle cx="38" cy="42" r="6.5" fill="#FFF8F0"/>
+        <circle cx="60" cy="30" r="8" fill="#FFF8F0"/>
+        <circle cx="82" cy="42" r="6" fill="#FFF8F0"/>
+        <g class="alive-face">
+          ${kawaiiEyes(51, 69, 76, 3.8)}
+          ${wMouth(60, 81)}
+        </g>
+      </g>`
+    },
+    { id: 'p_succulent', realm: 'plant', name: '多肉植物', habitat: 'land', mainColor: '#B7E4C7', subColor: '#74C69D',
+      face: { x1: 51, x2: 69, y: 48, my: 53, r: 3.5 },
+      svg: `<g>
+        <ellipse cx="36" cy="54" rx="14" ry="10" fill="#74C69D" transform="rotate(-25 36 54)" ${S}/>
+        <ellipse cx="84" cy="54" rx="14" ry="10" fill="#74C69D" transform="rotate(25 84 54)" ${S}/>
+        <ellipse cx="44" cy="42" rx="13" ry="11" fill="#95D5B2" transform="rotate(-15 44 42)" ${S}/>
+        <ellipse cx="76" cy="42" rx="13" ry="11" fill="#95D5B2" transform="rotate(15 76 42)" ${S}/>
+        <ellipse cx="60" cy="48" rx="18" ry="14" fill="#B7E4C7" ${S}/>
+        ${potBase()}
+        <g class="alive-face">
+          ${kawaiiEyes(51, 69, 48, 3.5)}
+          ${smileMouth(60, 52)}
+        </g>
+      </g>`
+    },
+    { id: 'p_tulip', realm: 'plant', name: '鬱金香', habitat: 'land', mainColor: '#FF4D6D', subColor: '#FF758F',
+      face: { x1: 52, x2: 68, y: 40, my: 45, r: 3.2 },
+      svg: `<g>
+        <path d="M60,72 L60,48" stroke="#52B788" stroke-width="5" ${S}/>
+        <path d="M60,72 Q36,62 34,40 Q48,54 60,68" fill="#74C69D" ${S}/>
+        <path d="M60,72 Q84,62 86,40 Q72,54 60,68" fill="#74C69D" ${S}/>
+        ${potBase()}
+        <path d="M40,38 C40,16 60,20 60,38 C60,20 80,16 80,38 C80,54 40,54 40,38 Z" fill="#FF758F" ${S}/>
+        <ellipse cx="60" cy="36" rx="10" ry="15" fill="#FF4D6D" ${S}/>
+        <g class="alive-face">
+          ${kawaiiEyes(52, 68, 40, 3.2)}
+        </g>
+      </g>`
+    },
+    { id: 'p_fern', realm: 'plant', name: '鹿角蕨', habitat: 'land', mainColor: '#52B788', subColor: '#74C69D',
+      face: { x1: 51, x2: 69, y: 72, my: 77, r: 3.8 },
+      svg: `<g>
+        <path d="M52,62 C36,44 22,36 20,20 C28,22 34,30 38,20 C42,28 46,42 54,56" fill="#74C69D" ${S}/>
+        <path d="M68,62 C84,44 98,36 100,20 C92,22 86,30 82,20 C78,28 74,42 66,56" fill="#74C69D" ${S}/>
+        <circle cx="60" cy="72" r="22" fill="#52B788" ${S}/>
+        <g class="alive-face">
+          ${kawaiiEyes(51, 69, 72, 3.8)}
+          ${smileMouth(60, 77)}
+        </g>
+      </g>`
+    },
+    { id: 'p_sakura', realm: 'plant', name: '櫻花', habitat: 'land', mainColor: '#FFB7C5', subColor: '#FFE5EC',
+      face: { x1: 51, x2: 69, y: 55, my: 61, r: 4.0 },
+      svg: `<g>
+        <g fill="#FFB7C5" ${S}>
+          <circle cx="60" cy="30" r="16"/>
+          <circle cx="84" cy="48" r="16"/>
+          <circle cx="75" cy="76" r="16"/>
+          <circle cx="45" cy="76" r="16"/>
+          <circle cx="36" cy="48" r="16"/>
+        </g>
+        <circle cx="60" cy="56" r="18" fill="#FFE5EC"/>
+        <g class="alive-face">
+          ${kawaiiEyes(51, 69, 55, 4)}
+          ${smileMouth(60, 61)}
+        </g>
+      </g>`
+    },
+    { id: 'p_flytrap', realm: 'plant', name: '捕蠅草', habitat: 'land', mainColor: '#70E000', subColor: '#EF476F',
+      face: { x1: 49, x2: 71, y: 29, my: 36, r: 3.5 },
+      svg: `<g>
+        <path d="M60,72 L60,48" stroke="#52B788" stroke-width="6" ${S}/>
+        ${potBase()}
+        <path d="M32,42 C32,16 88,16 88,42 Z" fill="#70E000" ${S}/>
+        <path d="M36,42 C36,56 84,56 84,42 Z" fill="#EF476F" ${S}/>
+        <polyline points="38,42 43,36 48,42 54,36 60,42 66,36 72,42 77,36 82,42" fill="none" stroke="#FFFFFF" stroke-width="2.5"/>
+        <g class="alive-face">
+          ${kawaiiEyes(49, 71, 29, 3.5)}
+        </g>
+      </g>`
+    },
+    { id: 'p_dandelion', realm: 'plant', name: '蒲公英', habitat: 'land', mainColor: '#FFFDF9', subColor: '#F4F1DE',
+      face: { x1: 51, x2: 69, y: 44, my: 49, r: 3.8 },
+      svg: `<g>
+        <path d="M60,96 L60,56" stroke="#52B788" stroke-width="5" ${S}/>
+        <circle cx="60" cy="44" r="26" fill="#FFFDF9" stroke="#B8C4D0" stroke-width="3" stroke-dasharray="6,4"/>
+        <circle cx="60" cy="44" r="18" fill="#F4F1DE" ${S}/>
+        <g class="alive-face">
+          ${kawaiiEyes(51, 69, 44, 3.8)}
+          ${smileMouth(60, 49)}
+        </g>
+      </g>`
+    },
+    { id: 'p_clover', realm: 'plant', name: '幸運草', habitat: 'land', mainColor: '#52B788', subColor: '#74C69D',
+      face: { x1: 52, x2: 68, y: 51, my: 56, r: 3.6 },
+      svg: `<g>
+        <path d="M60,98 Q64,78 60,58" fill="none" stroke="#38B000" stroke-width="5" ${S}/>
+        <g fill="#52B788" ${S}>
+          <circle cx="60" cy="30" r="14"/>
+          <circle cx="84" cy="52" r="14"/>
+          <circle cx="60" cy="74" r="14"/>
+          <circle cx="36" cy="52" r="14"/>
+        </g>
+        <circle cx="60" cy="52" r="14" fill="#74C69D"/>
+        <g class="alive-face">
+          ${kawaiiEyes(52, 68, 51, 3.6)}
+          ${smileMouth(60, 56)}
+        </g>
+      </g>`
+    },
+    { id: 'p_cactus', realm: 'plant', name: '仙人掌', habitat: 'land', mainColor: '#52B788', subColor: '#FF4D6D',
+      face: { x1: 50, x2: 70, y: 48, my: 53, r: 3.8 },
+      svg: `<g>
+        <ellipse cx="32" cy="52" rx="8" ry="14" fill="#52B788" transform="rotate(-25 32 52)" ${S}/>
+        <ellipse cx="88" cy="52" rx="8" ry="14" fill="#52B788" transform="rotate(25 88 52)" ${S}/>
+        <rect x="40" y="28" width="40" height="48" rx="20" fill="#52B788" ${S}/>
+        <circle cx="60" cy="24" r="8" fill="#FF4D6D" ${S}/>
+        ${potBase()}
+        <g class="alive-face">
+          ${kawaiiEyes(50, 70, 48, 3.8)}
+          ${wMouth(60, 53)}
+        </g>
+      </g>`
+    },
+    { id: 'p_hydrangea', realm: 'plant', name: '繡球花', habitat: 'land', mainColor: '#A2D2FF', subColor: '#CDB4DB',
+      face: { x1: 51, x2: 69, y: 56, my: 61, r: 3.8 },
+      svg: `<g>
+        <ellipse cx="36" cy="76" rx="16" ry="8" fill="#52B788" transform="rotate(-20 36 76)" ${S}/>
+        <ellipse cx="84" cy="76" rx="16" ry="8" fill="#52B788" transform="rotate(20 84 76)" ${S}/>
+        <circle cx="44" cy="46" r="16" fill="#90E0EF" ${S}/>
+        <circle cx="76" cy="46" r="16" fill="#CDB4DB" ${S}/>
+        <circle cx="60" cy="36" r="16" fill="#A2D2FF" ${S}/>
+        <circle cx="60" cy="58" r="18" fill="#BDE0FE" ${S}/>
+        <g class="alive-face">
+          ${kawaiiEyes(51, 69, 56, 3.8)}
+          ${smileMouth(60, 61)}
+        </g>
+      </g>`
+    },
+    { id: 'p_bamboo', realm: 'plant', name: '竹筍', habitat: 'land', mainColor: '#DDA15E', subColor: '#FEFAE0',
+      face: { x1: 51, x2: 69, y: 68, my: 73, r: 3.8 },
+      svg: `<g>
+        <path d="M32,92 L60,20 L88,92 Z" fill="#DDA15E" ${S}/>
+        <path d="M40,92 L60,36 L80,92 Z" fill="#FEFAE0" ${S}/>
+        <path d="M32,92 Q60,76 88,92 Z" fill="#BC6C25" ${S}/>
+        <g class="alive-face">
+          ${kawaiiEyes(51, 69, 68, 3.8)}
+          ${wMouth(60, 73)}
+        </g>
+      </g>`
+    },
+    { id: 'p_lavender', realm: 'plant', name: '薰衣草', habitat: 'land', mainColor: '#9D4EDD', subColor: '#C77DFF',
+      face: { x1: 54, x2: 66, y: 48, my: 53, r: 2.8 },
+      svg: `<g>
+        <path d="M60,72 L60,22" stroke="#52B788" stroke-width="4" ${S}/>
+        ${potBase()}
+        <g fill="#9D4EDD" ${S}>
+          <ellipse cx="60" cy="24" rx="8" ry="6"/>
+          <ellipse cx="52" cy="36" rx="8" ry="6"/>
+          <ellipse cx="68" cy="36" rx="8" ry="6"/>
+          <ellipse cx="60" cy="48" rx="12" ry="9"/>
+        </g>
+        <g class="alive-face">
+          ${kawaiiEyes(54, 66, 48, 2.8)}
+        </g>
+      </g>`
+    },
+    { id: 'p_cranberry', realm: 'plant', name: '蔓越莓', habitat: 'land', mainColor: '#E63946', subColor: '#C1121F',
+      face: { x1: 52, x2: 68, y: 56, my: 61, r: 3.8 },
+      svg: `<g>
+        <ellipse cx="44" cy="38" rx="14" ry="7" fill="#52B788" transform="rotate(-25 44 38)" ${S}/>
+        <ellipse cx="76" cy="38" rx="14" ry="7" fill="#52B788" transform="rotate(25 76 38)" ${S}/>
+        <circle cx="42" cy="64" r="15" fill="#C1121F" ${S}/>
+        <circle cx="78" cy="64" r="15" fill="#C1121F" ${S}/>
+        <circle cx="60" cy="56" r="19" fill="#E63946" ${S}/>
+        <circle cx="52" cy="46" r="3" fill="#FFFFFF" opacity="0.6"/>
+        <g class="alive-face">
+          ${kawaiiEyes(52, 68, 56, 3.8)}
+          ${smileMouth(60, 61)}
+        </g>
+      </g>`
+    },
+
+    // ═══════════════ 【微生物與病毒界 15 種】 ═══════════════
+    { id: 'm_phage', realm: 'microbe', name: '噬菌體', habitat: 'sky', mainColor: '#4CC9F0', subColor: '#4361EE',
+      face: { x1: 50, x2: 70, y: 42, my: 47, r: 3.8 },
+      svg: `<g>
+        <path d="M60,78 L32,98 M60,78 L88,98 M60,78 L42,102 M60,78 L78,102" stroke="#4361EE" stroke-width="3.5" stroke-linecap="round"/>
+        <rect x="54" y="58" width="12" height="22" rx="3" fill="#4895EF" ${S}/>
+        <polygon points="60,16 84,30 84,52 60,64 36,52 36,30" fill="#4CC9F0" ${S}/>
+        <g class="alive-face">
+          ${kawaiiEyes(50, 70, 42, 3.8)}
+          ${smileMouth(60, 47)}
+        </g>
+      </g>`
+    },
+    { id: 'm_ecoli', realm: 'microbe', name: '大腸桿菌', habitat: 'sky', mainColor: '#FF8FA3', subColor: '#FF758F',
+      face: { x1: 46, x2: 74, y: 54, my: 59, r: 4.2 },
+      svg: `<g>
+        <path d="M26,48 Q10,40 14,28 M26,58 Q8,60 12,74 M94,48 Q110,40 106,28 M94,58 Q112,60 108,74" fill="none" stroke="#FF758F" stroke-width="3.2" stroke-linecap="round"/>
+        <rect x="26" y="36" width="68" height="38" rx="19" fill="#FF8FA3" ${S}/>
+        <g class="alive-face">
+          ${kawaiiEyes(46, 74, 54, 4.2)}
+          ${wMouth(60, 59)}
+        </g>
+      </g>`
+    },
+    { id: 'm_tardigrade', realm: 'microbe', name: '水熊蟲', habitat: 'sky', mainColor: '#FFB5A7', subColor: '#E5989B',
+      face: { x1: 44, x2: 68, y: 58, my: 64, r: 3.8 },
+      svg: `<g>
+        <ellipse cx="40" cy="84" rx="5" ry="7" fill="#E5989B" ${S}/>
+        <ellipse cx="54" cy="86" rx="5" ry="7" fill="#E5989B" ${S}/>
+        <ellipse cx="68" cy="86" rx="5" ry="7" fill="#E5989B" ${S}/>
+        <ellipse cx="82" cy="84" rx="5" ry="7" fill="#E5989B" ${S}/>
+        <ellipse cx="60" cy="60" rx="32" ry="22" fill="#FFB5A7" ${S}/>
+        <g class="alive-face">
+          ${kawaiiEyes(44, 68, 58, 3.8)}
+          <circle cx="56" cy="64" r="4" fill="#E5989B" ${S2}/>
+        </g>
+      </g>`
+    },
+    { id: 'm_yeast', realm: 'microbe', name: '酵母菌', habitat: 'sky', mainColor: '#FFD166', subColor: '#FFE5B4',
+      face: { x1: 44, x2: 64, y: 60, my: 66, r: 4.0 },
+      svg: `<g>
+        <circle cx="80" cy="34" r="14" fill="#FFE5B4" ${S}/>
+        <circle cx="54" cy="62" r="26" fill="#FFD166" ${S}/>
+        <g class="alive-face">
+          ${kawaiiEyes(44, 64, 60, 4)}
+          ${smileMouth(54, 66)}
+        </g>
+      </g>`
+    },
+    { id: 'm_strepto', realm: 'microbe', name: '鏈球菌', habitat: 'sky', mainColor: '#FFB703', subColor: '#FB8500',
+      face: { x1: 53, x2: 67, y: 47, my: 52, r: 3.4 },
+      svg: `<g>
+        <circle cx="24" cy="64" r="11" fill="#FFB703" ${S}/>
+        <circle cx="42" cy="54" r="12" fill="#FB8500" ${S}/>
+        <circle cx="78" cy="54" r="12" fill="#FB8500" ${S}/>
+        <circle cx="96" cy="64" r="11" fill="#FFB703" ${S}/>
+        <circle cx="60" cy="48" r="16" fill="#FFD166" ${S}/>
+        <g class="alive-face">
+          ${kawaiiEyes(53, 67, 47, 3.4)}
+          ${smileMouth(60, 52)}
+        </g>
+      </g>`
+    },
+    { id: 'm_paramecium', realm: 'microbe', name: '草履蟲', habitat: 'sky', mainColor: '#80ED99', subColor: '#57CC99',
+      face: { x1: 48, x2: 68, y: 56, my: 61, r: 3.8 },
+      svg: `<g>
+        <path d="M42,24 C28,28 28,88 56,94 C84,96 88,52 76,32 C68,20 52,20 42,24 Z" fill="#80ED99" ${S}/>
+        <circle cx="58" cy="38" r="6" fill="#57CC99"/>
+        <circle cx="58" cy="76" r="8" fill="#57CC99"/>
+        <g class="alive-face">
+          ${kawaiiEyes(48, 68, 56, 3.8)}
+          ${smileMouth(58, 61)}
+        </g>
+      </g>`
+    },
+    { id: 'm_euglena', realm: 'microbe', name: '眼蟲', habitat: 'sky', mainColor: '#2EC4B6', subColor: '#E63946',
+      face: { x1: 50, x2: 70, y: 58, my: 63, r: 3.8 },
+      svg: `<g>
+        <path d="M60,22 Q74,8 88,14" fill="none" stroke="#2EC4B6" stroke-width="3.5" stroke-linecap="round"/>
+        <path d="M60,22 C36,44 36,76 60,98 C84,76 84,44 60,22 Z" fill="#2EC4B6" ${S}/>
+        <circle cx="68" cy="38" r="4" fill="#E63946"/>
+        <g class="alive-face">
+          ${kawaiiEyes(50, 70, 58, 3.8)}
+          ${smileMouth(60, 63)}
+        </g>
+      </g>`
+    },
+    { id: 'm_slime', realm: 'microbe', name: '黏菌', habitat: 'sky', mainColor: '#FFD166', subColor: '#FFB703',
+      face: { x1: 47, x2: 73, y: 56, my: 62, r: 4.4 },
+      svg: `<g>
+        <path d="M26,76 C18,52 38,26 60,26 C82,26 102,52 94,76 C84,88 36,88 26,76 Z" fill="#FFD166" ${S}/>
+        <g class="alive-face">
+          ${kawaiiEyes(47, 73, 56, 4.4)}
+          ${wMouth(60, 62)}
+        </g>
+      </g>`
+    },
+    { id: 'm_corona', realm: 'microbe', name: '冠狀病毒', habitat: 'sky', mainColor: '#FF8FA3', subColor: '#FF4D6D',
+      face: { x1: 49, x2: 71, y: 55, my: 61, r: 4.0 },
+      svg: `<g>
+        <g fill="#FF4D6D" ${S2}>
+          <circle cx="60" cy="18" r="5"/><circle cx="60" cy="94" r="5"/>
+          <circle cx="22" cy="56" r="5"/><circle cx="98" cy="56" r="5"/>
+          <circle cx="33" cy="29" r="5"/><circle cx="87" cy="29" r="5"/>
+          <circle cx="33" cy="83" r="5"/><circle cx="87" cy="83" r="5"/>
+        </g>
+        <circle cx="60" cy="56" r="26" fill="#FF8FA3" ${S}/>
+        <g class="alive-face">
+          ${kawaiiEyes(49, 71, 55, 4)}
+          ${wMouth(60, 61)}
+        </g>
+      </g>`
+    },
+    { id: 'm_spirillum', realm: 'microbe', name: '螺旋菌', habitat: 'sky', mainColor: '#06D6A0', subColor: '#80ED99',
+      face: { x1: 50, x2: 70, y: 56, my: 61, r: 3.5 },
+      svg: `<g>
+        <path d="M24,62 Q42,32 60,62 Q78,92 96,62" fill="none" stroke="#06D6A0" stroke-width="18" stroke-linecap="round"/>
+        <path d="M24,62 Q42,32 60,62 Q78,92 96,62" fill="none" ${S}/>
+        <g class="alive-face">
+          ${kawaiiEyes(50, 70, 56, 3.5)}
+        </g>
+      </g>`
+    },
+    { id: 'm_bifido', realm: 'microbe', name: '雙歧桿菌', habitat: 'sky', mainColor: '#48CAE4', subColor: '#90E0EF',
+      face: { x1: 51, x2: 69, y: 58, my: 63, r: 3.6 },
+      svg: `<g>
+        <path d="M36,28 L60,58 L84,28 M60,58 L60,92" fill="none" stroke="#48CAE4" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M36,28 L60,58 L84,28 M60,58 L60,92" fill="none" ${S}/>
+        <g class="alive-face">
+          ${kawaiiEyes(51, 69, 58, 3.6)}
+        </g>
+      </g>`
+    },
+    { id: 'm_mimi', realm: 'microbe', name: '擬菌病毒', habitat: 'sky', mainColor: '#B5179E', subColor: '#F72585',
+      face: { x1: 49, x2: 71, y: 56, my: 62, r: 4.0 },
+      svg: `<g>
+        <polygon points="60,20 92,38 92,74 60,92 28,74 28,38" fill="#B5179E" ${S}/>
+        <polygon points="60,28 84,42 84,70 60,84 36,70 36,42" fill="#F72585"/>
+        <g class="alive-face">
+          ${kawaiiEyes(49, 71, 56, 4)}
+          ${smileMouth(60, 62)}
+        </g>
+      </g>`
+    },
+    { id: 'm_diatom', realm: 'microbe', name: '矽藻', habitat: 'sky', mainColor: '#48CAE4', subColor: '#90E0EF',
+      face: { x1: 50, x2: 70, y: 55, my: 60, r: 3.8 },
+      svg: `<g>
+        <circle cx="60" cy="56" r="30" fill="#48CAE4" ${S}/>
+        <circle cx="60" cy="56" r="22" fill="#90E0EF" ${S2}/>
+        <g class="alive-face">
+          ${kawaiiEyes(50, 70, 55, 3.8)}
+          ${smileMouth(60, 60)}
+        </g>
+      </g>`
+    },
+    { id: 'm_amoeba', realm: 'microbe', name: '變形蟲', habitat: 'sky', mainColor: '#CDB4DB', subColor: '#FFC8DD',
+      face: { x1: 49, x2: 71, y: 58, my: 64, r: 4.0 },
+      svg: `<g>
+        <path d="M36,34 C18,42 22,78 42,84 C62,90 92,84 94,60 C96,36 78,24 60,32 C48,38 44,28 36,34 Z" fill="#CDB4DB" ${S}/>
+        <g class="alive-face">
+          ${kawaiiEyes(49, 71, 58, 4)}
+          ${wMouth(60, 64)}
+        </g>
+      </g>`
+    },
+    { id: 'm_spirulina', realm: 'microbe', name: '螺旋藻', habitat: 'sky', mainColor: '#52B788', subColor: '#74C69D',
+      face: { x1: 50, x2: 70, y: 53, my: 58, r: 3.5 },
+      svg: `<g>
+        <ellipse cx="60" cy="36" rx="22" ry="9" fill="#38B000" ${S}/>
+        <ellipse cx="60" cy="54" rx="22" ry="9" fill="#52B788" ${S}/>
+        <ellipse cx="60" cy="72" rx="22" ry="9" fill="#74C69D" ${S}/>
+        <g class="alive-face">
+          ${kawaiiEyes(50, 70, 53, 3.5)}
+        </g>
+      </g>`
+    }
+  ];
+
+  // ── 9 大傳奇限定角色 ──
+  const LEGENDARY = [
+    { id: 'leg_dragon', realm: 'legendary', habitat: 'sky', name: '星穹聖龍', desc: '邀請滿 5 位好友解鎖', cond: 'invite_5', babyType: 'dragon_egg', mainColor: '#4CC9F0', subColor: '#FFB703',
+      face: { x1: 47, x2: 73, y: 47, my: 54, r: 4.6 },
+      svg: `<g>
+        <circle cx="60" cy="56" r="46" fill="none" stroke="#FFB703" stroke-width="2.5" stroke-dasharray="6,4" opacity="0.85"/>
+        <path d="M38,56 C10,30 6,54 18,68 C10,76 22,86 38,74 Z" fill="#7209B7" stroke="#FFB703" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M82,56 C110,30 114,54 102,68 C110,76 98,86 82,74 Z" fill="#7209B7" stroke="#FFB703" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M74,88 C98,98 112,78 98,66 C90,62 88,78 76,80" fill="#4361EE" ${S}/>
+        <polygon points="102,64 114,56 108,70 116,76 100,74" fill="#FFB703" ${S2}/>
+        <path d="M40,60 C34,80 38,98 60,98 C82,98 86,80 80,60 Z" fill="#4CC9F0" ${S}/>
+        <path d="M48,64 C46,80 48,96 60,96 C72,96 74,80 72,64 Z" fill="#FFF3B0" ${S2}/>
+        <line x1="50" y1="74" x2="70" y2="74" stroke="#E0A96D" stroke-width="2"/>
+        <line x1="49" y1="82" x2="71" y2="82" stroke="#E0A96D" stroke-width="2"/>
+        <line x1="51" y1="90" x2="69" y2="90" stroke="#E0A96D" stroke-width="2"/>
+        <path d="M44,30 C34,12 22,14 26,24 C32,22 36,28 40,34" fill="#FFB703" ${S}/>
+        <path d="M34,20 L38,10" stroke="#4A3728" stroke-width="3" stroke-linecap="round"/>
+        <path d="M76,30 C86,12 98,14 94,24 C88,22 84,28 80,34" fill="#FFB703" ${S}/>
+        <path d="M86,20 L82,10" stroke="#4A3728" stroke-width="3" stroke-linecap="round"/>
+        <path d="M34,42 L16,36 L24,50 Z" fill="#F72585" ${S}/>
+        <path d="M86,42 L104,36 L96,50 Z" fill="#F72585" ${S}/>
+        <ellipse cx="60" cy="46" rx="25" ry="20" fill="#4CC9F0" ${S}/>
+        <polygon points="60,29 63,35 60,41 57,35" fill="#F72585" stroke="#FFB703" stroke-width="1.5"/>
+        <path d="M38,54 Q20,58 16,48" fill="none" stroke="#FFB703" stroke-width="3" stroke-linecap="round"/>
+        <path d="M82,54 Q100,58 104,48" fill="none" stroke="#FFB703" stroke-width="3" stroke-linecap="round"/>
+        <g class="alive-face">
+          ${kawaiiEyes(47, 73, 47, 4.6)}
+          ${wMouth(60, 54)}
+        </g>
+        <circle cx="60" cy="78" r="8" fill="#F72585" stroke="#FFB703" stroke-width="2.5"/>
+        <circle cx="57" cy="75" r="2.5" fill="#FFFFFF"/>
+        <ellipse cx="48" cy="77" rx="5" ry="3.5" fill="#4CC9F0" ${S2}/>
+        <ellipse cx="72" cy="77" rx="5" ry="3.5" fill="#4CC9F0" ${S2}/>
+      </g>`
+    },
+    { id: 'leg_fox', realm: 'legendary', habitat: 'land', name: '九尾狐', desc: '圖鑑解鎖滿 20 種', cond: 'count_20', babyType: 'pacifier', mainColor: '#E0AAFF', subColor: '#9D4EDD',
+      face: { x1: 48, x2: 72, y: 48, my: 54, r: 4.3 },
+      svg: `<g>
+        <path d="M30,74 Q10,48 24,28 M90,74 Q110,48 96,28 M24,62 Q8,34 20,18 M96,62 Q112,34 100,18" fill="none" stroke="#C77DFF" stroke-width="6" stroke-linecap="round"/>
+        <ellipse cx="60" cy="72" rx="22" ry="18" fill="#9D4EDD" ${S}/>
+        <polygon points="34,42 38,16 52,32" fill="#7209B7" ${S}/>
+        <polygon points="86,42 82,16 68,32" fill="#7209B7" ${S}/>
+        <ellipse cx="60" cy="48" rx="24" ry="20" fill="#E0AAFF" ${S}/>
+        <g class="alive-face">
+          ${kawaiiEyes(48, 72, 48, 4.3)}
+          ${wMouth(60, 54)}
+        </g>
+      </g>`
+    },
+    { id: 'leg_owl', realm: 'legendary', habitat: 'sky', name: '貓頭鷹', desc: '學習閱讀滿 120 分鐘', cond: 'study_120', babyType: 'egg_hatch', mainColor: '#3F37C9', subColor: '#BDE0FE',
+      face: { x1: 48, x2: 72, y: 52, my: 60, r: 4.0 },
+      svg: `<g>
+        <ellipse cx="60" cy="62" rx="28" ry="28" fill="#3F37C9" ${S}/>
+        <ellipse cx="60" cy="68" rx="18" ry="18" fill="#BDE0FE"/>
+        <polygon points="26,30 60,16 94,30 60,42" fill="#1D3557" ${S}/>
+        <circle cx="48" cy="52" r="8" fill="#FFFFFF" ${S2}/>
+        <circle cx="72" cy="52" r="8" fill="#FFFFFF" ${S2}/>
+        <polygon points="56,58 64,58 60,64" fill="#FFB703" ${S2}/>
+        <g class="alive-face">
+          ${kawaiiEyes(48, 72, 52, 4)}
+        </g>
+      </g>`
+    },
+    { id: 'leg_kang', realm: 'legendary', habitat: 'land', name: '拳擊袋鼠', desc: '健康運動完成 3 次', cond: 'sport_3', babyType: 'pacifier', mainColor: '#F4A261', subColor: '#D90429',
+      face: { x1: 50, x2: 70, y: 44, my: 51, r: 4.0 },
+      svg: `<g>
+        <ellipse cx="60" cy="68" rx="22" ry="24" fill="#E07A5F" ${S}/>
+        <polygon points="40,34 44,12 54,30" fill="#E07A5F" ${S}/>
+        <polygon points="80,34 76,12 66,30" fill="#E07A5F" ${S}/>
+        <ellipse cx="60" cy="44" rx="20" ry="16" fill="#F4A261" ${S}/>
+        <g class="alive-face">
+          ${kawaiiEyes(50, 70, 44, 4)}
+        </g>
+        <circle cx="34" cy="64" r="9" fill="#D90429" ${S}/>
+        <circle cx="86" cy="64" r="9" fill="#D90429" ${S}/>
+      </g>`
+    },
+    { id: 'leg_deer', realm: 'legendary', habitat: 'land', name: '櫻花鹿', desc: '單次專注滿 45 分鐘', cond: 'focus_45', babyType: 'pacifier', mainColor: '#FFE5EC', subColor: '#FFB7C5',
+      face: { x1: 48, x2: 72, y: 56, my: 62, r: 4.3 },
+      svg: `<g>
+        <path d="M46,28 Q36,12 26,14 M74,28 Q84,12 94,14" fill="none" stroke="#B08968" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="28" cy="14" r="5" fill="#FFB7C5"/>
+        <circle cx="92" cy="14" r="5" fill="#FFB7C5"/>
+        <ellipse cx="60" cy="56" rx="25" ry="22" fill="#FFE5EC" ${S}/>
+        <g class="alive-face">
+          ${kawaiiEyes(48, 72, 56, 4.3)}
+          ${smileMouth(60, 62)}
+        </g>
+      </g>`
+    },
+    { id: 'leg_finch', realm: 'legendary', name: '金翅雀', habitat: 'sky', desc: '早晨 5:00~9:00 完成專注', cond: 'morning', babyType: 'egg_hatch', mainColor: '#FFB703', subColor: '#FB8500',
+      face: { x1: 49, x2: 71, y: 55, my: 62, r: 4.2 },
+      svg: `<g>
+        <circle cx="60" cy="58" r="25" fill="#FFB703" ${S}/>
+        <ellipse cx="32" cy="58" rx="8" ry="14" fill="#FB8500" ${S}/>
+        <ellipse cx="88" cy="58" rx="8" ry="14" fill="#FB8500" ${S}/>
+        <polygon points="56,60 64,60 60,66" fill="#E63946" ${S2}/>
+        <g class="alive-face">
+          ${kawaiiEyes(49, 71, 55, 4.2)}
+        </g>
+      </g>`
+    },
+    { id: 'leg_seal', realm: 'legendary', habitat: 'water', name: '冥想海豹', desc: '冥想沉澱滿 60 分鐘', cond: 'meditate_60', babyType: 'water_larva', mainColor: '#F8F9FA', subColor: '#FFE5B4',
+      face: { x1: 49, x2: 71, y: 53, my: 60, r: 4.0 },
+      svg: `<g>
+        <ellipse cx="60" cy="84" rx="34" ry="12" fill="#FFE5B4" ${S}/>
+        <ellipse cx="60" cy="58" rx="26" ry="22" fill="#F8F9FA" ${S}/>
+        <g class="alive-face">
+          <path d="M44,54 Q49,50 54,54 M66,54 Q71,50 76,54" fill="none" ${S}/>
+          ${wMouth(60, 60)}
+        </g>
+      </g>`
+    },
+    { id: 'leg_phageking', realm: 'legendary', habitat: 'sky', name: '噬菌體王', desc: '收穫滿 5 隻微生物', cond: 'microbe_5', mainColor: '#7209B7', subColor: '#FFB703',
+      face: { x1: 49, x2: 71, y: 48, my: 54, r: 4.0 },
+      svg: `<g>
+        <polygon points="46,24 54,12 60,22 66,12 74,24" fill="#FFB703" ${S}/>
+        <polygon points="60,22 86,36 86,62 60,76 34,62 34,36" fill="#7209B7" ${S}/>
+        <g class="alive-face">
+          ${kawaiiEyes(49, 71, 48, 4)}
+        </g>
+      </g>`
+    },
+    { id: 'leg_worldtree', realm: 'legendary', habitat: 'land', name: '世界樹', desc: '收穫滿 10 株植物', cond: 'plant_10', mainColor: '#52B788', subColor: '#74C69D',
+      face: { x1: 50, x2: 70, y: 46, my: 52, r: 3.8 },
+      svg: `<g>
+        <path d="M48,96 L52,58 L68,58 L72,96 Z" fill="#7F5539" ${S}/>
+        <circle cx="60" cy="42" r="28" fill="#52B788" ${S}/>
+        <circle cx="40" cy="50" r="18" fill="#74C69D" ${S}/>
+        <circle cx="80" cy="50" r="18" fill="#74C69D" ${S}/>
+        <g class="alive-face">
+          ${kawaiiEyes(50, 70, 46, 3.8)}
+          ${smileMouth(60, 52)}
+        </g>
+      </g>`
+    }
+  ];
+
+  // 合併全 54 種物種供統一檢索
+  const ALL_SPECIES = [...DATABASE, ...LEGENDARY];
+
+  // 輔助函式：移除生物原本的活體表情 (用於剛發芽無表情階段、閉眼睡覺階段或死亡表情替換)
+  function stripAliveFace(svgContent) {
+    return svgContent.replace(/<g class="alive-face">[\s\S]*?<\/g>/g, '');
+  }
+
+  // 輔助函式：替換為閉眼安睡嬰兒表情 (用於胎生動物階段 1 初生幼仔)
+  function replaceWithSleepingBabyFace(sp) {
+    const f = sp.face || { x1: 48, x2: 72, y: 50, my: 58, r: 4 };
+    const mx = (f.x1 + f.x2) / 2;
+    const sleepFace = `<g class="baby-sleep-face">
+      <path d="M${f.x1 - f.r},${f.y} Q${f.x1},${f.y + f.r*0.9} ${f.x1 + f.r},${f.y}" fill="none" stroke="#3D2B1F" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M${f.x2 - f.r},${f.y} Q${f.x2},${f.y + f.r*0.9} ${f.x2 + f.r},${f.y}" fill="none" stroke="#3D2B1F" stroke-width="2.6" stroke-linecap="round"/>
+      <ellipse cx="${f.x1 - f.r*1.1}" cy="${f.y + f.r*1.1}" rx="${f.r*0.9}" ry="${f.r*0.5}" fill="#FF8FA3" opacity="0.6"/>
+      <ellipse cx="${f.x2 + f.r*1.1}" cy="${f.y + f.r*1.1}" rx="${f.r*0.9}" ry="${f.r*0.5}" fill="#FF8FA3" opacity="0.6"/>
+      <!-- 嬰兒小奶嘴 -->
+      <ellipse cx="${mx}" cy="${f.my + 1}" rx="6.5" ry="5" fill="#FF8FA3" ${S2}/>
+      <circle cx="${mx}" cy="${f.my + 1}" r="3" fill="#FFE5EC" ${S2}/>
+      <path d="M${mx - 4.5},${f.my + 3} C${mx - 4.5},${f.my + 9} ${mx + 4.5},${f.my + 9} ${mx + 4.5},${f.my + 3}" fill="none" stroke="#FFF8F0" stroke-width="2.4" stroke-linecap="round"/>
+    </g>`;
+    return sp.svg.replace(/<g class="alive-face">[\s\S]*?<\/g>/, sleepFace);
+  }
+
+  // 輔助函式：替換為精準五官座標的「死掉／枯萎哭喪臉」(徹底消除原本微笑與發亮眼神)
+  function replaceWithDeadFace(sp) {
+    const f = sp.face || { x1: 48, x2: 72, y: 50, my: 58, r: 4.2 };
+    const r = Math.max(3.6, f.r * 1.05);
+    const mx = (f.x1 + f.x2) / 2;
+    const isPlant = sp.realm === 'plant' || sp.id === 'leg_worldtree';
+
+    const deadFace = `<g class="dead-face">
+      <!-- 額頭黑線陰影 -->
+      <line x1="${mx - 6}" y1="${f.y - r - 7}" x2="${mx - 6}" y2="${f.y - r - 1}" stroke="#2B1E16" stroke-width="1.8" stroke-linecap="round" opacity="0.7"/>
+      <line x1="${mx - 2}" y1="${f.y - r - 8}" x2="${mx - 2}" y2="${f.y - r - 1}" stroke="#2B1E16" stroke-width="1.8" stroke-linecap="round" opacity="0.7"/>
+      <line x1="${mx + 2}" y1="${f.y - r - 7}" x2="${mx + 2}" y2="${f.y - r - 1}" stroke="#2B1E16" stroke-width="1.8" stroke-linecap="round" opacity="0.7"/>
+      <!-- 左眼 X -->
+      <path d="M${f.x1 - r},${f.y - r} L${f.x1 + r},${f.y + r} M${f.x1 + r},${f.y - r} L${f.x1 - r},${f.y + r}" stroke="#2B1E16" stroke-width="3.2" stroke-linecap="round"/>
+      <!-- 右眼 X -->
+      <path d="M${f.x2 - r},${f.y - r} L${f.x2 + r},${f.y + r} M${f.x2 + r},${f.y - r} L${f.x2 - r},${f.y + r}" stroke="#2B1E16" stroke-width="3.2" stroke-linecap="round"/>
+      <!-- 悲傷眼淚水滴 -->
+      <path d="M${f.x1 - r - 1},${f.y + 2} Q${f.x1 - r - 5},${f.y + 9} ${f.x1 - r - 1},${f.y + 11} Q${f.x1 - r + 3},${f.y + 9} ${f.x1 - r - 1},${f.y + 2} Z" fill="#48CAE4" opacity="0.85"/>
+      <path d="M${f.x2 + r + 1},${f.y + 2} Q${f.x2 + r - 3},${f.y + 9} ${f.x2 + r + 1},${f.y + 11} Q${f.x2 + r + 5},${f.y + 9} ${f.x2 + r + 1},${f.y + 2} Z" fill="#48CAE4" opacity="0.85"/>
+      <!-- 哭喪下垂嘴與無力小舌頭 -->
+      <path d="M${mx - 6.5},${f.my + 4} Q${mx},${f.my - 3.5} ${mx + 6.5},${f.my + 4}" fill="none" stroke="#2B1E16" stroke-width="2.8" stroke-linecap="round"/>
+      ${isPlant ? '' : `<path d="M${mx + 0.5},${f.my + 1} C${mx + 0.5},${f.my + 9} ${mx + 6.5},${f.my + 9} ${mx + 5.5},${f.my + 2.5} Z" fill="#E5989B" stroke="#2B1E16" stroke-width="1.8"/>`}
+    </g>`;
+    return sp.svg.replace(/<g class="alive-face">[\s\S]*?<\/g>/, deadFace);
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // 五階段進化渲染器 (Stage 1: 0% ➔ Stage 2: 25% ➔ Stage 3: 50% ➔ Stage 4: 75% ➔ Stage 5: 100%)
+  // 包含植物「陽光-澆水-施肥-授粉」、動物「孵蛋/餵奶-破蛋/餵飯-長大互動」、微生物「滴培養液-養分吸收-電能激發」動畫
+  // ══════════════════════════════════════════════════════════════════════
+  function getSpeciesStageSvg(sp, stage) {
+    const c1 = sp.mainColor || '#74C69D';
+    const c2 = sp.subColor || '#FFE5EC';
+    const isPlant = sp.realm === 'plant' || sp.id === 'leg_worldtree';
+    const isMicrobe = sp.realm === 'microbe' || sp.id === 'leg_phageking';
+    const isEggAnimal = sp.babyType === 'egg_hatch' || sp.babyType === 'dragon_egg';
+
+    // ──────────────── 1. 植物類五階段 (種子 ➔ 長苗無表情 ➔ 長出表情 ➔ 長得更高 ➔ 最終型態) ────────────────
+    if (isPlant) {
+      if (stage === 1) {
+        // 階段 1 (0%~25%)：盆中種子 + ☀️ 陽光溫暖照耀動畫
+        return `<svg viewBox="0 0 120 120" class="main-svg">
+          <!-- 陽光光束與動態旋轉小太陽 -->
+          <polygon points="88,26 42,74 76,74" fill="#FFE5B4" opacity="0.38"/>
+          <g class="anim-sun">
+            <circle cx="88" cy="26" r="11" fill="#FFB703" ${S2}/>
+            <path d="M88,9 L88,4 M88,43 L88,48 M71,26 L66,26 M105,26 L110,26 M76,14 L72,10 M100,38 L104,42 M100,14 L104,10 M76,38 L72,42" stroke="#FB8500" stroke-width="2.5" stroke-linecap="round"/>
+          </g>
+          ${potBase()}
+          <!-- 專屬色系種子躺於泥土中 -->
+          <ellipse cx="60" cy="71" rx="9.5" ry="6.5" fill="${c1}" ${S}/>
+          <path d="M55,70 Q60,67 65,70" fill="none" stroke="${c2}" stroke-width="2" stroke-linecap="round"/>
+        </svg>`;
+      } else if (stage === 2) {
+        // 階段 2 (25%~50%)：長出嫩苗（無表情） + 🚿 澆水壺灑水滴落動畫
+        return `<svg viewBox="0 0 120 120" class="main-svg">
+          <!-- 破土嫩苗與無表情雛形 -->
+          <path d="M60,74 Q60,55 60,46" fill="none" stroke="#52B788" stroke-width="4.5" stroke-linecap="round"/>
+          <ellipse cx="50" cy="55" rx="9" ry="5" fill="#74C69D" transform="rotate(-25 50 55)" ${S2}/>
+          <ellipse cx="70" cy="55" rx="9" ry="5" fill="#74C69D" transform="rotate(25 70 55)" ${S2}/>
+          <circle cx="60" cy="43" r="6.5" fill="${c1}" ${S2}/>
+          ${potBase()}
+          <!-- 澆水壺與動態落下水滴 -->
+          <g transform="translate(82, 16) rotate(-25)">
+            <rect x="0" y="6" width="20" height="14" rx="4" fill="#48CAE4" ${S2}/>
+            <path d="M0,12 L-10,6 L-12,9 L-2,16 Z" fill="#90E0EF" ${S2}/>
+            <path d="M20,8 C26,8 26,18 20,18" fill="none" ${S2}/>
+          </g>
+          <circle cx="64" cy="30" r="2.6" fill="#0096C7" class="anim-water-1"/>
+          <circle cx="57" cy="34" r="2.6" fill="#48CAE4" class="anim-water-2"/>
+          <circle cx="68" cy="36" r="2.4" fill="#0096C7" class="anim-water-3"/>
+        </svg>`;
+      } else if (stage === 3) {
+        // 階段 3 (50%~75%)：長出可愛五官表情 (約 68% 高度) + 🌱 施肥營養吸收動畫
+        return `<svg viewBox="0 0 120 120" class="main-svg">
+          <g transform="translate(60, 102) scale(0.70) translate(-60, -102)">
+            ${sp.svg}
+          </g>
+          <!-- 營養肥料袋與上升營養星芒 -->
+          <g class="anim-sparkle-1">
+            <circle cx="40" cy="68" r="3.5" fill="#FFB703"/>
+            <text x="30" y="55" font-size="11" fill="#52B788" font-weight="900">＋養分</text>
+          </g>
+          <g class="anim-sparkle-2">
+            <circle cx="80" cy="64" r="3.5" fill="#70E000"/>
+            <text x="78" y="50" font-size="12">✨</text>
+          </g>
+        </svg>`;
+      } else if (stage === 4) {
+        // 階段 4 (75%~100%)：長得更高更茂盛 (約 86% 高度) + 🦋 蝴蝶授粉環繞動畫
+        return `<svg viewBox="0 0 120 120" class="main-svg">
+          <circle cx="60" cy="58" r="44" fill="${c1}" opacity="0.12"/>
+          <g transform="translate(60, 104) scale(0.86) translate(-60, -104)">
+            ${sp.svg}
+          </g>
+          <!-- 飛舞小蝴蝶 -->
+          <g class="anim-butterfly">
+            <ellipse cx="86" cy="28" rx="6" ry="4" fill="#FF8FA3" transform="rotate(-30 86 28)" ${S2}/>
+            <ellipse cx="94" cy="32" rx="6" ry="4" fill="#FFB703" transform="rotate(30 94 32)" ${S2}/>
+            <line x1="88" y1="33" x2="92" y2="27" stroke="#4A3728" stroke-width="2" stroke-linecap="round"/>
+          </g>
+        </svg>`;
+      } else {
+        // 階段 5 (100%)：最終完全體
+        return `<svg viewBox="0 0 120 120" class="main-svg">${sp.svg}</svg>`;
+      }
+    }
+
+    // ──────────────── 2. 蛋生動物五階段 (完整蛋 ➔ 破蛋餵奶 ➔ 蛋殼消失餵飯 ➔ 長得更高 ➔ 最終型態) ────────────────
+    if (isEggAnimal) {
+      const isDragon = sp.babyType === 'dragon_egg';
+      const shellFill = isDragon ? '#7209B7' : '#FFF8F0';
+      if (stage === 1) {
+        // 階段 1 (0%~25%)：完整專屬花紋蛋 + 🌡️ 溫暖孵蛋光環動畫
+        return `<svg viewBox="0 0 120 120" class="main-svg">
+          <ellipse cx="60" cy="96" rx="28" ry="7" fill="#E6CCB2" opacity="0.6"/>
+          <circle cx="60" cy="64" r="38" fill="#FFB703" opacity="0.14" class="anim-sparkle-1"/>
+          <g class="anim-egg">
+            <path d="M60,24 C38,24 32,56 32,74 C32,92 44,100 60,100 C76,100 88,92 88,74 C88,56 82,24 60,24 Z" fill="${shellFill}" ${S}/>
+            <circle cx="48" cy="56" r="6" fill="${c1}" opacity="0.85"/>
+            <circle cx="72" cy="66" r="7.5" fill="${c2}" opacity="0.85"/>
+            <circle cx="54" cy="80" r="5" fill="${c1}" opacity="0.85"/>
+          </g>
+          <text x="84" y="34" font-size="14" class="anim-sparkle-2">❤️</text>
+        </svg>`;
+      } else if (stage === 2) {
+        // 階段 2 (25%~50%)：破蛋而出（下半部蛋殼裂開，小腦袋探出） + 🍼 餵牠喝牛奶動畫
+        return `<svg viewBox="0 0 120 120" class="main-svg">
+          <ellipse cx="60" cy="98" rx="28" ry="7" fill="#E6CCB2" opacity="0.5"/>
+          <g class="anim-chew" transform="translate(56, 54) scale(0.55) translate(-60, -52)">
+            ${sp.svg}
+          </g>
+          <!-- 裂開的下半部蛋殼 -->
+          <path d="M30,68 L40,59 L50,69 L58,58 L66,69 L76,59 L84,68 C84,90 73,100 57,100 C41,100 30,90 30,68 Z" fill="${shellFill}" ${S}/>
+          <circle cx="45" cy="82" r="4.5" fill="${c1}"/>
+          <circle cx="68" cy="80" r="4" fill="${c2}"/>
+          <!-- 動態傾斜餵牛奶瓶與牛奶滴 -->
+          <g class="anim-bottle">
+            <rect x="82" y="30" width="14" height="24" rx="5" fill="#FFFDF9" ${S2}/>
+            <rect x="84" y="36" width="10" height="16" rx="3" fill="#CAF0F8"/>
+            <rect x="85" y="25" width="8" height="5" rx="2" fill="#FF8FA3" ${S2}/>
+            <path d="M86,25 L89,18 L92,25 Z" fill="#FFD166" ${S2}/>
+          </g>
+          <circle cx="74" cy="46" r="2.8" fill="#FFFFFF" stroke="#48CAE4" stroke-width="1.5" class="anim-milk-drop"/>
+          <text x="20" y="38" font-size="12" class="anim-sparkle-1">🍼</text>
+        </svg>`;
+      } else if (stage === 3) {
+        // 階段 3 (50%~75%)：蛋殼完全消失（全身可愛幼體） + 🍙 餵牠吃飯動畫
+        return `<svg viewBox="0 0 120 120" class="main-svg">
+          <ellipse cx="56" cy="98" rx="26" ry="6" fill="rgba(0,0,0,0.08)"/>
+          <g class="anim-chew" transform="translate(55, 68) scale(0.66) translate(-60, -64)">
+            ${sp.svg}
+          </g>
+          <!-- 動態餵食美味飯糰 -->
+          <g class="anim-food">
+            <path d="M88,52 L102,74 L74,74 Z" fill="#FFFDF9" ${S2}/>
+            <rect x="83" y="65" width="10" height="9" fill="#2B2D42" rx="1"/>
+            <circle cx="85" cy="60" r="1.5" fill="#FF8FA3"/>
+            <circle cx="91" cy="60" r="1.5" fill="#FF8FA3"/>
+          </g>
+          <text x="22" y="42" font-size="13" class="anim-sparkle-1">😋</text>
+        </svg>`;
+      } else if (stage === 4) {
+        // 階段 4 (75%~100%)：長得更高亞成體 (約 86% 比例) + ✨ 成長星芒動畫
+        return `<svg viewBox="0 0 120 120" class="main-svg">
+          <circle cx="60" cy="60" r="44" fill="none" stroke="${c1}" stroke-width="2" stroke-dasharray="6,5" opacity="0.55"/>
+          <g transform="translate(60, 64) scale(0.86) translate(-60, -62)">
+            ${sp.svg}
+          </g>
+          <text x="18" y="34" font-size="13" class="anim-sparkle-1">✨</text>
+          <text x="86" y="30" font-size="14" class="anim-sparkle-2">🎵</text>
+        </svg>`;
+      } else {
+        // 階段 5 (100%)：最終完全體
+        return `<svg viewBox="0 0 120 120" class="main-svg">${sp.svg}</svg>`;
+      }
+    }
+
+    // ──────────────── 3. 微生物類五階段 (初始孢子滴培養液 ➔ 雛形無表情吸養分 ➔ 長出表情 ➔ 長得更大 ➔ 最終型態) ────────────────
+    if (isMicrobe) {
+      if (stage === 1) {
+        // 階段 1 (0%~25%)：初始微生孢子/細胞核（無表情） + 🧪 滴管滴入營養液動畫
+        return `<svg viewBox="0 0 120 120" class="main-svg">
+          <circle cx="60" cy="68" r="28" fill="${c1}" opacity="0.2" stroke="${c1}" stroke-width="2.5" stroke-dasharray="5,4"/>
+          <circle cx="60" cy="68" r="15" fill="${c1}" ${S}/>
+          <circle cx="55" cy="64" r="5" fill="${c2}" opacity="0.8"/>
+          <!-- 實驗滴管與動態滴落培養液 -->
+          <g transform="translate(76, 8) rotate(25)">
+            <rect x="6" y="0" width="10" height="12" rx="5" fill="#FF8FA3" ${S2}/>
+            <polygon points="4,12 18,12 13,30 9,30" fill="#CAF0F8" ${S2}/>
+          </g>
+          <circle cx="64" cy="40" r="3" fill="#06D6A0" class="anim-water-1"/>
+          <circle cx="60" cy="46" r="2.5" fill="#4CC9F0" class="anim-water-2"/>
+        </svg>`;
+      } else if (stage === 2) {
+        // 階段 2 (25%~50%)：細胞分裂發育出外型（無表情） + 🍬 葡萄糖養分分子吸收動畫
+        return `<svg viewBox="0 0 120 120" class="main-svg">
+          <circle cx="60" cy="62" r="36" fill="${c1}" opacity="0.14"/>
+          <g transform="translate(60, 62) scale(0.58) translate(-60, -60)">
+            ${stripAliveFace(sp.svg)}
+          </g>
+          <!-- 飄入的養分分子 -->
+          <g class="anim-nutrient">
+            <polygon points="88,30 95,34 95,42 88,46 81,42 81,34" fill="#FFD166" ${S2}/>
+          </g>
+          <circle cx="32" cy="42" r="4" fill="#06D6A0" class="anim-sparkle-1"/>
+        </svg>`;
+      } else if (stage === 3) {
+        // 階段 3 (50%~75%)：長出可愛五官表情 (72% 比例) + ⚡ ATP 生物電能激發動畫
+        return `<svg viewBox="0 0 120 120" class="main-svg">
+          <g class="anim-chew" transform="translate(60, 62) scale(0.72) translate(-60, -60)">
+            ${sp.svg}
+          </g>
+          <text x="82" y="34" font-size="14" class="anim-sparkle-1">⚡</text>
+          <text x="22" y="78" font-size="12" class="anim-sparkle-2">✨</text>
+        </svg>`;
+      } else if (stage === 4) {
+        // 階段 4 (75%~100%)：長得更大高活性亞成體 (86% 比例) + 🧬 基因進化光環
+        return `<svg viewBox="0 0 120 120" class="main-svg">
+          <circle cx="60" cy="60" r="45" fill="none" stroke="${c1}" stroke-width="2.2" stroke-dasharray="6,5" opacity="0.6"/>
+          <g transform="translate(60, 60) scale(0.86) translate(-60, -60)">
+            ${sp.svg}
+          </g>
+          <text x="84" y="28" font-size="13" class="anim-sparkle-1">🧬</text>
+        </svg>`;
+      } else {
+        // 階段 5 (100%)：最終完全體
+        return `<svg viewBox="0 0 120 120" class="main-svg">${sp.svg}</svg>`;
+      }
+    }
+
+    // ──────────────── 4. 胎生／水生動物五階段 (閉眼初生幼仔餵奶 ➔ 睜眼幼崽餵飯 ➔ 陪玩長大 ➔ 長得更高 ➔ 最終型態) ────────────────
+    if (stage === 1) {
+      // 階段 1 (0%~25%)：剛出生閉眼吸奶嘴的極小幼仔 (50% 比例) + 🍼 奶瓶傾斜餵牛奶動畫
+      return `<svg viewBox="0 0 120 120" class="main-svg">
+        <ellipse cx="56" cy="94" rx="26" ry="7" fill="#E6CCB2" opacity="0.55"/>
+        <g class="anim-chew" transform="translate(55, 68) scale(0.50) translate(-60, -60)">
+          ${replaceWithSleepingBabyFace(sp)}
+        </g>
+        <!-- 動態傾斜餵牛奶瓶與牛奶滴 -->
+        <g class="anim-bottle">
+          <rect x="82" y="32" width="14" height="24" rx="5" fill="#FFFDF9" ${S2}/>
+          <rect x="84" y="38" width="10" height="16" rx="3" fill="#CAF0F8"/>
+          <rect x="85" y="27" width="8" height="5" rx="2" fill="#FF8FA3" ${S2}/>
+          <path d="M86,27 L89,20 L92,27 Z" fill="#FFD166" ${S2}/>
+        </g>
+        <circle cx="72" cy="52" r="2.8" fill="#FFFFFF" stroke="#48CAE4" stroke-width="1.5" class="anim-milk-drop"/>
+        <text x="24" y="42" font-size="12" class="anim-sparkle-1">💗</text>
+      </svg>`;
+    } else if (stage === 2) {
+      // 階段 2 (25%~50%)：拿掉奶嘴睜開眼睛的小幼崽 (63% 比例) + 🍙 餵牠吃飯動畫
+      return `<svg viewBox="0 0 120 120" class="main-svg">
+        <ellipse cx="56" cy="96" rx="26" ry="6.5" fill="rgba(0,0,0,0.08)"/>
+        <g class="anim-chew" transform="translate(55, 66) scale(0.63) translate(-60, -60)">
+          ${sp.svg}
+        </g>
+        <!-- 動態遞到嘴邊的美味飯糰 -->
+        <g class="anim-food">
+          <path d="M88,52 L102,74 L74,74 Z" fill="#FFFDF9" ${S2}/>
+          <rect x="83" y="65" width="10" height="9" fill="#2B2D42" rx="1"/>
+          <circle cx="85" cy="60" r="1.5" fill="#FF8FA3"/>
+          <circle cx="91" cy="60" r="1.5" fill="#FF8FA3"/>
+        </g>
+        <text x="22" y="42" font-size="13" class="anim-sparkle-1">😋</text>
+      </svg>`;
+    } else if (stage === 3) {
+      // 階段 3 (50%~75%)：活潑成長期 (75% 比例) + 🎵 陪玩互動與音符動畫
+      return `<svg viewBox="0 0 120 120" class="main-svg">
+        <circle cx="60" cy="64" r="39" fill="${c1}" opacity="0.11"/>
+        <g class="anim-chew" transform="translate(60, 64) scale(0.75) translate(-60, -60)">
+          ${sp.svg}
+        </g>
+        <text x="84" y="34" font-size="14" class="anim-sparkle-1">🎵</text>
+        <text x="20" y="40" font-size="13" class="anim-sparkle-2">🌱</text>
+      </svg>`;
+    } else if (stage === 4) {
+      // 階段 4 (75%~100%)：長得更高亞成體 (88% 比例) + ✨ 進化星光環繞動畫
+      return `<svg viewBox="0 0 120 120" class="main-svg">
+        <circle cx="60" cy="60" r="45" fill="none" stroke="${c1}" stroke-width="2" stroke-dasharray="6,6" opacity="0.5"/>
+        <g transform="translate(60, 62) scale(0.88) translate(-60, -60)">
+          ${sp.svg}
+        </g>
+        <text x="18" y="34" font-size="14" class="anim-sparkle-1">✨</text>
+        <text x="86" y="30" font-size="14" class="anim-sparkle-2">✨</text>
+      </svg>`;
+    } else {
+      // 階段 5 (100%)：100% 成年完全體
+      return `<svg viewBox="0 0 120 120" class="main-svg">${sp.svg}</svg>`;
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // 專屬物種死亡／枯萎渲染器（全 54 種生物移除微笑與發亮眼神，改為精準五官座標 X X 叉叉眼與哭喪嘴）
+  // ══════════════════════════════════════════════════════════════════════
+  function getDeadSpeciesSvg(sp) {
+    const deadBodySvg = replaceWithDeadFace(sp);
+
+    if (sp.realm === 'plant' || sp.id === 'leg_worldtree') {
+      // 植物枯萎：原本微笑五官已被替換為 X X 眼與哭喪下垂嘴，花身枯黃彎折、花盆破裂、枯葉散落
+      return `<svg viewBox="0 0 120 120" class="main-svg">
+        <ellipse cx="62" cy="105" rx="34" ry="6" fill="rgba(0,0,0,0.14)"/>
+        <g style="filter: grayscale(0.78) sepia(0.55) brightness(0.86);" transform="translate(62, 96) rotate(28) scale(0.92, 0.84) translate(-60, -96)">
+          ${deadBodySvg}
+        </g>
+        <!-- 花盆裂紋與地上凋零枯葉 -->
+        <path d="M52,82 L57,90 L53,97" fill="none" stroke="#3D2B1F" stroke-width="2" stroke-linecap="round"/>
+        <ellipse cx="26" cy="102" rx="7" ry="3.5" fill="#9C6644" transform="rotate(-15 26 102)" ${S2}/>
+        <ellipse cx="94" cy="103" rx="6" ry="3" fill="#7F5539" transform="rotate(20 94 103)" ${S2}/>
+        <!-- 飄升的枯萎靈魂嘆息 -->
+        <g class="anim-soul">
+          <path d="M26,48 C26,36 40,36 40,48 C40,54 37,58 33,62 C29,58 26,54 26,48 Z" fill="#E2ECE9" opacity="0.75" stroke="#6C757D" stroke-width="1.5"/>
+          <circle cx="30" cy="46" r="1.5" fill="#4A3728"/>
+          <circle cx="36" cy="46" r="1.5" fill="#4A3728"/>
+        </g>
+      </svg>`;
+    } else {
+      // 動物與微生物死掉：原本微笑五官已被替換為 X X 眼與吐舌哭喪嘴，身體無力側倒癱在地上、冒出飄升小幽魂
+      return `<svg viewBox="0 0 120 120" class="main-svg">
+        <!-- 倒地陰影 -->
+        <ellipse cx="60" cy="96" rx="40" ry="8" fill="rgba(0,0,0,0.15)"/>
+        <!-- 失去血色並癱軟側倒的本體（內含精準座標的 X X 眼與哭喪吐舌嘴） -->
+        <g style="filter: grayscale(0.82) contrast(0.92) brightness(0.92);" transform="translate(58, 72) rotate(76) scale(0.86, 0.82) translate(-60, -58)">
+          ${deadBodySvg}
+        </g>
+        <!-- 頭頂飄出的半透明小靈魂 -->
+        <g class="anim-soul">
+          <path d="M74,28 C74,14 94,14 94,28 C94,36 90,41 84,46 C78,41 74,36 74,28 Z" fill="#FFFFFF" opacity="0.85" stroke="#6C757D" stroke-width="1.8"/>
+          <circle cx="80" cy="26" r="1.8" fill="#4A3728"/>
+          <circle cx="88" cy="26" r="1.8" fill="#4A3728"/>
+          <ellipse cx="84" cy="31" rx="2.5" ry="3.2" fill="#4A3728"/>
+        </g>
+      </svg>`;
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // 全螢幕繽紛灑花動畫系統 (Canvas Confetti & Flower Petals)
+  // ══════════════════════════════════════════════════════════════════════
+  const confettiCanvas = document.getElementById('confetti-canvas');
+  const cCtx = confettiCanvas.getContext('2d');
+  let confettiParticles = [];
+  let confettiAnimId = null;
+
+  function launchConfettiShower() {
+    confettiCanvas.width = window.innerWidth;
+    confettiCanvas.height = window.innerHeight;
+    const colors = ['#FF758F', '#FFB703', '#52B788', '#4CC9F0', '#C77DFF', '#FF8FA3', '#FFD166'];
+    confettiParticles = [];
+
+    for (let i = 0; i < 130; i++) {
+      confettiParticles.push({
+        x: Math.random() * confettiCanvas.width,
+        y: Math.random() * -confettiCanvas.height * 0.6 - 20,
+        w: 8 + Math.random() * 7,
+        h: 6 + Math.random() * 6,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        vy: 2.5 + Math.random() * 3.5,
+        vx: (Math.random() - 0.5) * 3,
+        angle: Math.random() * 360,
+        vAngle: (Math.random() - 0.5) * 8,
+        isPetal: Math.random() > 0.4
+      });
+    }
+
+    if (confettiAnimId) cancelAnimationFrame(confettiAnimId);
+    const startTime = Date.now();
+
+    function step() {
+      cCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      let active = false;
+      confettiParticles.forEach(p => {
+        p.y += p.vy;
+        p.x += p.vx + Math.sin(p.y * 0.02) * 0.8;
+        p.angle += p.vAngle;
+        if (p.y < confettiCanvas.height + 30) active = true;
+
+        cCtx.save();
+        cCtx.translate(p.x, p.y);
+        cCtx.rotate((p.angle * Math.PI) / 180);
+        cCtx.fillStyle = p.color;
+        if (p.isPetal) {
+          cCtx.beginPath();
+          cCtx.ellipse(0, 0, p.w * 0.6, p.h * 0.4, 0, 0, Math.PI * 2);
+          cCtx.fill();
+        } else {
+          cCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        }
+        cCtx.restore();
+      });
+
+      if (active && Date.now() - startTime < 5500) {
+        confettiAnimId = requestAnimationFrame(step);
+      } else {
+        cCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      }
+    }
+    step();
+  }
+
+  // ── 應用狀態 ──
+  let currentRealm = 'animal';
+  let currentTarget = DATABASE[0];
+  let currentTag = '學習閱讀';
+  let totalSeconds = 25 * 60;
+  let remainingSeconds = totalSeconds;
+  let timerStatus = 'IDLE'; // 'IDLE' | 'RUNNING' | 'PAUSED' | 'GRACE_PERIOD' | 'WILTED'
+  let timerInterval = null;
+  let targetEndTime = null;
+  let currentRenderedStage = -1;
+
+  let maxGraceSeconds = 180;
+  let graceSeconds = 180;
+  let graceInterval = null;
+
+  // 90秒全生物快閃展示狀態（疊加於原有生物之上，90秒後僅移除快閃生物）
+  let demoModeActive = false;
+  let demoRemainSec = 0;
+  let demoCountdownTimer = null;
+
+  const viewport = document.getElementById('viewport');
+  const timeText = document.getElementById('time-text');
+  const statusHint = document.getElementById('status-hint');
+  const btnToggle = document.getElementById('btn-toggle');
+  const btnGiveup = document.getElementById('btn-giveup');
+  const panicBanner = document.getElementById('panic-banner');
+  const graceSecSpan = document.getElementById('grace-sec');
+  const targetBtn = document.getElementById('target-picker-btn');
+  const chkSound = document.getElementById('chk-sound');
+  const soundSelect = document.getElementById('sound-type');
+  const volSlider = document.getElementById('vol-slider');
+  const chkPenalty = document.getElementById('chk-penalty');
+
+  // ── 本地資料與傳奇解鎖判定 ──
+  const STORAGE_KEY = 'mori_sanctuary_records_v8';
+  const INVITE_KEY = 'mori_sanctuary_invites_v8';
+  const FRIENDS_KEY = 'mori_sanctuary_friends_v8';
+
+  function getRecords() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(e){ return []; }
+  }
+
+  function getInviteCount() {
+    try { return new Set(getCustomFriends().filter(f => f && f.uid).map(f => f.uid)).size; }
+    catch (e) { return 0; }
+  }
+
+  // 傳奇物種實際解鎖判定（嚴格檢查任務條件，不受 90 秒預覽影響）
+  function isLegendaryUnlocked(lg, recordsList) {
+    const list = recordsList || getRecords();
+    const invites = getInviteCount();
+    const studyMins = list.filter(i => i.tag === '學習閱讀').reduce((a, b) => a + b.mins, 0);
+    const sportCount = list.filter(i => i.tag === '健康運動').length;
+    const hasLongFocus = list.some(i => i.mins >= 45);
+    const meditateMins = list.filter(i => i.tag === '冥想沉澱').reduce((a, b) => a + b.mins, 0);
+    const microbeCount = list.filter(i => i.realm === 'microbe').length;
+    const plantCount = list.filter(i => i.realm === 'plant').length;
+    const totalKinds = new Set(list.map(i => i.id)).size;
+
+    if (lg.cond === 'invite_5') return invites >= 5;
+    if (lg.cond === 'count_20') return totalKinds >= 20;
+    if (lg.cond === 'study_120') return studyMins >= 120;
+    if (lg.cond === 'sport_3') return sportCount >= 3;
+    if (lg.cond === 'focus_45') return hasLongFocus;
+    if (lg.cond === 'morning') return list.some(i => { const h = new Date(i.time).getHours(); return h >= 5 && h <= 9; });
+    if (lg.cond === 'meditate_60') return meditateMins >= 60;
+    if (lg.cond === 'microbe_5') return microbeCount >= 5;
+    if (lg.cond === 'plant_10') return plantCount >= 10;
+    return false;
+  }
+
+  // ── Web Audio API 無洩漏白噪音系統 ──
+  let audioCtx = null;
+  let masterGain = null;
+  let ambientSource = null;
+  let ambientInterval = null;
+  let waveLfo = null;
+
+  function initAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  }
+
+  function startAmbientSound() {
+    if (!chkSound.checked) return;
+    initAudio();
+    stopAmbientSound();
+
+    const ctx = audioCtx;
+    const vol = parseFloat(volSlider.value);
+
+    masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(vol, ctx.currentTime);
+    masterGain.connect(ctx.destination);
+
+    const type = soundSelect.value;
+    const bufSize = ctx.sampleRate * 2;
+    const buffer = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    let b0 = 0, b1 = 0, b2 = 0;
+    for (let i = 0; i < bufSize; i++) {
+      const white = Math.random() * 2 - 1;
+      b0 = 0.99886 * b0 + white * 0.0555179;
+      b1 = 0.99332 * b1 + white * 0.0750759;
+      b2 = 0.96900 * b2 + white * 0.1538520;
+      data[i] = (b0 + b1 + b2 + white * 0.1) * 0.35;
+    }
+
+    ambientSource = ctx.createBufferSource();
+    ambientSource.buffer = buffer;
+    ambientSource.loop = true;
+
+    if (type === 'fire') {
+      const fireFilter = ctx.createBiquadFilter();
+      fireFilter.type = 'lowpass';
+      fireFilter.frequency.setValueAtTime(240, ctx.currentTime);
+      ambientSource.connect(fireFilter);
+      fireFilter.connect(masterGain);
+      ambientSource.start();
+
+      ambientInterval = setInterval(() => {
+        if (!chkSound.checked || timerStatus !== 'RUNNING') return;
+        if (Math.random() < 0.36) {
+          const crackle = ctx.createBufferSource();
+          const crackleBuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.012), ctx.sampleRate);
+          const cData = crackleBuf.getChannelData(0);
+          for (let i = 0; i < cData.length; i++) cData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (cData.length * 0.25));
+          crackle.buffer = crackleBuf;
+
+          const cFilter = ctx.createBiquadFilter();
+          cFilter.type = 'bandpass';
+          cFilter.frequency.setValueAtTime(1200 + Math.random() * 1000, ctx.currentTime);
+          cFilter.Q.setValueAtTime(3.2, ctx.currentTime);
+
+          const cGain = ctx.createGain();
+          cGain.gain.setValueAtTime(0.3 * vol, ctx.currentTime);
+
+          crackle.connect(cFilter);
+          cFilter.connect(cGain);
+          cGain.connect(ctx.destination);
+          crackle.start();
+          crackle.onended = () => { crackle.disconnect(); cFilter.disconnect(); cGain.disconnect(); };
+        }
+      }, 105);
+
+    } else if (type === 'wave') {
+      const waveFilter = ctx.createBiquadFilter();
+      waveFilter.type = 'lowpass';
+      waveFilter.frequency.setValueAtTime(380, ctx.currentTime);
+
+      const waveGain = ctx.createGain();
+      waveGain.gain.setValueAtTime(0.08, ctx.currentTime);
+
+      waveLfo = ctx.createOscillator();
+      const lfoGain = ctx.createGain();
+      waveLfo.frequency.setValueAtTime(0.105, ctx.currentTime);
+      lfoGain.gain.setValueAtTime(0.42, ctx.currentTime);
+
+      waveLfo.connect(lfoGain);
+      lfoGain.connect(waveGain.gain);
+
+      ambientSource.connect(waveFilter);
+      waveFilter.connect(waveGain);
+      waveGain.connect(masterGain);
+
+      waveLfo.start();
+      ambientSource.start();
+
+    } else if (type === 'breeze') {
+      const breezeFilter = ctx.createBiquadFilter();
+      breezeFilter.type = 'bandpass';
+      breezeFilter.frequency.setValueAtTime(450, ctx.currentTime);
+      breezeFilter.Q.setValueAtTime(2.2, ctx.currentTime);
+      ambientSource.connect(breezeFilter);
+      breezeFilter.connect(masterGain);
+      ambientSource.start();
+
+    } else if (type === 'rain') {
+      const rainFilter = ctx.createBiquadFilter();
+      rainFilter.type = 'lowpass';
+      rainFilter.frequency.setValueAtTime(850, ctx.currentTime);
+      ambientSource.connect(rainFilter);
+      rainFilter.connect(masterGain);
+      ambientSource.start();
+
+      ambientInterval = setInterval(() => {
+        if (!chkSound.checked || timerStatus !== 'RUNNING') return;
+        const drop = ctx.createOscillator();
+        const dropG = ctx.createGain();
+        const freq = 1600 + Math.random() * 1400;
+        drop.type = 'sine';
+        drop.frequency.setValueAtTime(freq, ctx.currentTime);
+        drop.frequency.exponentialRampToValueAtTime(freq * 0.5, ctx.currentTime + 0.03);
+
+        dropG.gain.setValueAtTime(0.1 * vol, ctx.currentTime);
+        dropG.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.03);
+
+        drop.connect(dropG);
+        dropG.connect(ctx.destination);
+        drop.start();
+        drop.stop(ctx.currentTime + 0.035);
+        drop.onended = () => { drop.disconnect(); dropG.disconnect(); };
+      }, 110);
+    }
+  }
+
+  function stopAmbientSound() {
+    if (ambientSource) {
+      try { ambientSource.stop(); } catch(e){}
+      ambientSource.disconnect();
+      ambientSource = null;
+    }
+    if (waveLfo) {
+      try { waveLfo.stop(); } catch(e){}
+      waveLfo.disconnect();
+      waveLfo = null;
+    }
+    if (ambientInterval) { clearInterval(ambientInterval); ambientInterval = null; }
+  }
+
+  function playSuccessDing() {
+    initAudio();
+    const ctx = audioCtx;
+    const playN = (freq, delay) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+      g.gain.setValueAtTime(0.26 * parseFloat(volSlider.value), ctx.currentTime + delay);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.9);
+      o.connect(g);
+      g.connect(ctx.destination);
+      o.start(ctx.currentTime + delay);
+      o.stop(ctx.currentTime + delay + 0.95);
+      o.onended = () => { o.disconnect(); g.disconnect(); };
+    };
+    playN(523.25, 0);
+    playN(659.25, 0.12);
+    playN(783.99, 0.24);
+    playN(1046.50, 0.36);
+  }
+
+  volSlider.addEventListener('input', () => {
+    if (masterGain && audioCtx) masterGain.gain.setValueAtTime(parseFloat(volSlider.value), audioCtx.currentTime);
+  });
+
+  // ── 畫面主視圖渲染（五階段進化：0% ➔ 25% ➔ 50% ➔ 75% ➔ 100% 最終型態） ──
+  function getStageDescription(sp, stage) {
+    const isPlant = sp.realm === 'plant' || sp.id === 'leg_worldtree';
+    const isMicrobe = sp.realm === 'microbe' || sp.id === 'leg_phageking';
+    const isEgg = sp.babyType === 'egg_hatch' || sp.babyType === 'dragon_egg';
+
+    if (isPlant) {
+      const pNames = ['', '階段 1/5：種子與陽光 (0%)', '階段 2/5：破土長苗與澆水 (25%)', '階段 3/5：長出表情與施肥 (50%)', '階段 4/5：抽高茂盛與授粉 (75%)', '階段 5/5：最終完全體 (100%)'];
+      return pNames[stage];
+    } else if (isEgg) {
+      const eNames = ['', '階段 1/5：完整彩蛋孵育 (0%)', '階段 2/5：破蛋而出與餵奶 (25%)', '階段 3/5：蛋殼消失與餵飯 (50%)', '階段 4/5：長高健壯與互動 (75%)', '階段 5/5：最終完全體 (100%)'];
+      return eNames[stage];
+    } else if (isMicrobe) {
+      const mNames = ['', '階段 1/5：初始孢子滴培養液 (0%)', '階段 2/5：細胞發育吸養分 (25%)', '階段 3/5：長出表情與激發 (50%)', '階段 4/5：高活性亞成體 (75%)', '階段 5/5：最終完全體 (100%)'];
+      return mNames[stage];
+    } else {
+      const aNames = ['', '階段 1/5：初生幼仔餵牛奶 (0%)', '階段 2/5：睜眼幼崽餵吃飯 (25%)', '階段 3/5：活潑成長與陪玩 (50%)', '階段 4/5：長高亞成體 (75%)', '階段 5/5：最終完全體 (100%)'];
+      return aNames[stage];
+    }
+  }
+
+  function updateEvoIndicator(stage, isDead = false) {
+    const label = document.getElementById('evo-stage-text');
+    if (isDead) {
+      label.textContent = `💔 培育失敗：${currentTarget.name}已死掉／枯萎`;
+      for (let i = 1; i <= 5; i++) document.getElementById(`edot-${i}`).classList.remove('active');
+      return;
+    }
+    label.textContent = getStageDescription(currentTarget, stage);
+    for (let i = 1; i <= 5; i++) {
+      document.getElementById(`edot-${i}`).classList.toggle('active', i <= stage);
+    }
+  }
+
+  function updateMainViewport(force = false) {
+    if (timerStatus === 'WILTED') {
+      viewport.innerHTML = getDeadSpeciesSvg(currentTarget);
+      updateEvoIndicator(0, true);
+      currentRenderedStage = 99;
+      return;
+    }
+
+    if (currentRealm === 'break') {
+      if (currentRenderedStage !== 88 || force) {
+        viewport.innerHTML = `<svg viewBox="0 0 120 120" class="main-svg">${currentTarget.svg}</svg>`;
+        document.getElementById('evo-stage-text').textContent = '☕ 休息充電時間';
+        currentRenderedStage = 88;
+      }
+      return;
+    }
+
+    const elapsed = totalSeconds - remainingSeconds;
+    const progress = totalSeconds > 0 ? (elapsed / totalSeconds) : 0;
+
+    // 五階段進度切分 (以 1 分鐘 60 秒為例：0s=階段1、15s=階段2、30s=階段3、45s=階段4、60s=階段5最終型態)
+    let stage = 1;
+    if (progress >= 1.0 || remainingSeconds === 0 || timerStatus === 'GRACE_PERIOD') stage = 5;
+    else if (progress >= 0.75) stage = 4;
+    else if (progress >= 0.50) stage = 3;
+    else if (progress >= 0.25) stage = 2;
+
+    if (stage === currentRenderedStage && !force) return;
+    currentRenderedStage = stage;
+
+    viewport.innerHTML = getSpeciesStageSvg(currentTarget, stage);
+    updateEvoIndicator(stage, false);
+  }
+
+  // ── 防誤觸確認保護（開始學習後點其他功能鍵先詢問是否確定放棄） ──
+  async function checkAbandonIfActive() {
+    if (timerStatus === 'RUNNING' || timerStatus === 'PAUSED') {
+      const ok = await showConfirmModal('⚠️ 目前正在專注培育中！切換或離開將會中斷並放棄目前的進度（時間將歸零），確定要放棄嗎？');
+      if (!ok) return false;
+      clearInterval(timerInterval);
+      stopAmbientSound();
+      resetTimerRound();
+      return true;
+    }
+    return true;
+  }
+
+  // ── 計時與懲罰控制 ──
+  function formatSec(s) {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+  }
+
+  function clockTick() {
+    const diff = Math.max(0, Math.round((targetEndTime - Date.now()) / 1000));
+    if (diff <= 0) {
+      remainingSeconds = 0;
+      timeText.textContent = '00:00';
+      clearInterval(timerInterval);
+      onFocusComplete();
+    } else {
+      remainingSeconds = diff;
+      timeText.textContent = formatSec(remainingSeconds);
+      updateMainViewport(false);
+    }
+  }
+
+  function startFocus() {
+    initAudio();
+    targetEndTime = Date.now() + remainingSeconds * 1000;
+    timerInterval = setInterval(clockTick, 250);
+    timerStatus = 'RUNNING';
+
+    btnToggle.textContent = '暫停';
+    btnToggle.className = 'btn btn-pause';
+    btnGiveup.style.display = 'inline-block';
+    statusHint.textContent = `【${currentTag}】專注中，每滿 1/4 時間 ${currentTarget.name} 將進化一階！`;
+
+    startAmbientSound();
+  }
+
+  function pauseFocus() {
+    clearInterval(timerInterval);
+    timerStatus = 'PAUSED';
+    btnToggle.textContent = '繼續';
+    btnToggle.className = 'btn btn-start';
+    statusHint.textContent = '計時已暫停';
+    stopAmbientSound();
+  }
+
+  async function giveupFocus() {
+    const ok = await showConfirmModal(`確定要放棄嗎？你的【${currentTarget.name}】會死掉／枯萎喔！`);
+    if (!ok) return;
+    clearInterval(timerInterval);
+    timerStatus = 'WILTED';
+    stopAmbientSound();
+
+    btnToggle.textContent = '重新培育';
+    btnToggle.className = 'btn btn-start';
+    btnGiveup.style.display = 'none';
+    statusHint.textContent = `💔 培育中斷，${currentTarget.name} 倒地了，下次再接再厲！`;
+    updateMainViewport(true);
+  }
+
+  function onFocusComplete() {
+    stopAmbientSound();
+    playSuccessDing();
+    launchConfettiShower();
+
+    if (currentRealm === 'break') {
+      showNotice('☕ 休息結束！開始下一輪專注吧！');
+      resetTimerRound();
+      return;
+    }
+
+    const modal = document.getElementById('finish-modal');
+    const modalWarn = document.getElementById('modal-grace-warn');
+    const modalSec = document.getElementById('modal-grace-sec');
+
+    document.getElementById('adult-reveal-box').innerHTML = getSpeciesStageSvg(currentTarget, 5);
+    document.getElementById('finish-title').textContent = `恭喜！【${currentTarget.name}】達成第 5 階段完全體！`;
+    document.getElementById('finish-desc').textContent = `你完成了專注修煉！快點擊下方按鈕將牠接回浮空仙境島嶼吧！`;
+    modal.style.display = 'flex';
+
+    if (chkPenalty.checked) {
+      timerStatus = 'GRACE_PERIOD';
+      updateMainViewport(true);
+      panicBanner.style.display = 'block';
+      modalWarn.style.display = 'block';
+      graceSeconds = maxGraceSeconds;
+      graceSecSpan.textContent = graceSeconds;
+      modalSec.textContent = graceSeconds;
+
+      btnToggle.textContent = '🌾 立即採收！';
+      btnToggle.className = 'btn btn-harvest';
+      btnGiveup.style.display = 'none';
+      statusHint.textContent = `⚠️ 請在 ${maxGraceSeconds} 秒內點擊採收！逾時將枯萎死亡且不記入島嶼！`;
+
+      graceInterval = setInterval(() => {
+        graceSeconds--;
+        graceSecSpan.textContent = graceSeconds;
+        modalSec.textContent = graceSeconds;
+        if (graceSeconds <= 0) {
+          clearInterval(graceInterval);
+          panicBanner.style.display = 'none';
+          modal.style.display = 'none';
+          timerStatus = 'WILTED';
+          btnToggle.textContent = '重新培育';
+          btnToggle.className = 'btn btn-start';
+          statusHint.textContent = `💀 逾時未採收！【${currentTarget.name}】已死亡，無法進入生態仙境！`;
+          showNotice(`💔 超時未採收！你的【${currentTarget.name}】已經死掉了，未能入住生態仙境！`);
+          updateMainViewport(true);
+        }
+      }, 1000);
+    } else {
+      modalWarn.style.display = 'none';
+      timerStatus = 'GRACE_PERIOD';
+      updateMainViewport(true);
+    }
+  }
+
+  function executeSuccessfulHarvest() {
+    if (graceInterval) clearInterval(graceInterval);
+    panicBanner.style.display = 'none';
+    document.getElementById('finish-modal').style.display = 'none';
+
+    const mins = Math.max(1, Math.round(totalSeconds / 60));
+    recordHarvest(currentTarget, mins);
+    launchConfettiShower();
+    resetTimerRound();
+  }
+
+  document.getElementById('finish-confirm-btn').addEventListener('click', () => {
+    executeSuccessfulHarvest();
+  });
+
+  function resetTimerRound() {
+    if (graceInterval) clearInterval(graceInterval);
+    panicBanner.style.display = 'none';
+    clearInterval(timerInterval);
+    timerStatus = 'IDLE';
+    remainingSeconds = totalSeconds;
+    timeText.textContent = formatSec(remainingSeconds);
+    btnToggle.textContent = '開始專注';
+    btnToggle.className = 'btn btn-start';
+    btnGiveup.style.display = 'none';
+    statusHint.textContent = '共 5 個進化階段：每完成 1/4 時間進階一次，100% 達成最終完全體！';
+    currentRenderedStage = -1;
+    updateMainViewport(true);
+  }
+
+  function recordHarvest(item, mins) {
+    if (timerStatus === 'WILTED') return;
+    const list = getRecords();
+    list.unshift({
+      id: item.id,
+      name: item.name,
+      realm: item.realm,
+      habitat: item.habitat,
+      tag: currentTag,
+      mins: mins,
+      time: Date.now()
+    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    renderHabitatIsland('today');
+    renderJournal('all');
+    renderPokedex('all');
+    renderSocialLeaderboard();
+  }
+
+  // ── 生態仙境渲染 ──
+  const movingEntities = [];
+
+  function getBiomeCoords(habitat) {
+    if (habitat === 'sky') {
+      return { x: 10 + Math.random() * 80, y: 8 + Math.random() * 15 };
+    } else if (habitat === 'water') {
+      return { x: 10 + Math.random() * 80, y: 75 + Math.random() * 16 };
+    } else {
+      return { x: 16 + Math.random() * 68, y: 35 + Math.random() * 23 };
+    }
+  }
+
+  function stepAllIslandEntities() {
+    movingEntities.forEach(ent => {
+      const next = getBiomeCoords(ent.habitat);
+      if (ent.canFlip) {
+        ent.body.style.transform = (next.x < ent.x) ? 'scaleX(-1)' : 'scaleX(1)';
+      }
+      ent.wrap.style.left = `${next.x}%`;
+      ent.wrap.style.top = `${next.y}%`;
+      ent.wrap.style.zIndex = Math.round(next.y);
+      ent.x = next.x;
+      ent.y = next.y;
+    });
+  }
+
+  function renderHabitatIsland(span = 'today') {
+    const realList = getRecords();
+    const now = Date.now();
+    const dayMs = 24 * 3600 * 1000;
+
+    const realFiltered = realList.filter(i => {
+      if (span === 'today') return (now - i.time) < dayMs;
+      if (span === 'week')  return (now - i.time) < (7 * dayMs);
+      if (span === 'month') return (now - i.time) < (30 * dayMs);
+      return true;
+    });
+
+    const realMins = realFiltered.reduce((a, b) => a + (b.mins || 0), 0);
+    document.getElementById('span-mins').textContent = realMins;
+
+    const demoExtra = demoModeActive
+      ? DATABASE.map(d => ({ id: d.id, name: d.name, realm: d.realm, habitat: d.habitat, isDemo: true }))
+      : [];
+    const displayList = [...realFiltered, ...demoExtra];
+
+    document.getElementById('span-count').textContent = displayList.length;
+
+    const layer = document.getElementById('scenic-entities');
+    layer.innerHTML = '';
+    movingEntities.length = 0;
+
+    displayList.forEach(item => {
+      const sp = ALL_SPECIES.find(d => d.id === item.id) || DATABASE[0];
+      const wrap = document.createElement('div');
+      wrap.className = 'resident-entity';
+
+      const pos = getBiomeCoords(sp.habitat);
+      wrap.style.left = `${pos.x}%`;
+      wrap.style.top = `${pos.y}%`;
+      wrap.style.zIndex = Math.round(pos.y);
+
+      if (sp.habitat === 'sky') {
+        wrap.innerHTML = `
+          <div class="entity-body float-anim"><svg viewBox="0 0 120 120">${sp.svg}</svg></div>
+          <span class="entity-tag">${sp.name}</span>
+        `;
+        layer.appendChild(wrap);
+        movingEntities.push({ wrap, body: wrap.querySelector('.entity-body'), x: pos.x, y: pos.y, habitat: 'sky', canFlip: false });
+
+      } else if (sp.habitat === 'water') {
+        wrap.innerHTML = `
+          <div class="entity-body swim-anim"><svg viewBox="0 0 120 120">${sp.svg}</svg></div>
+          <span class="entity-tag">${sp.name}</span>
+        `;
+        layer.appendChild(wrap);
+        movingEntities.push({ wrap, body: wrap.querySelector('.entity-body'), x: pos.x, y: pos.y, habitat: 'water', canFlip: true });
+
+      } else {
+        const isPlant = sp.realm === 'plant' || sp.id === 'leg_worldtree';
+        wrap.innerHTML = `
+          <div class="entity-shadow"></div>
+          <div class="entity-body ${isPlant ? 'sway-anim' : 'walk-anim'}"><svg viewBox="0 0 120 120">${sp.svg}</svg></div>
+          <span class="entity-tag">${sp.name}</span>
+        `;
+        layer.appendChild(wrap);
+        if (!isPlant) {
+          movingEntities.push({ wrap, body: wrap.querySelector('.entity-body'), x: pos.x, y: pos.y, habitat: 'land', canFlip: true });
+        }
+      }
+    });
+
+    requestAnimationFrame(() => {
+      setTimeout(stepAllIslandEntities, 60);
+    });
+  }
+
+  setInterval(stepAllIslandEntities, 4000);
+
+  // ── 圖鑑與傳奇殿堂（總數 54 種：45 常規 + 9 限定傳奇；90秒預覽不影響實際解鎖） ──
+  let currentPokedexTab = 'all';
+
+  function renderPokedex(tab = currentPokedexTab) {
+    currentPokedexTab = tab;
+    const list = getRecords();
+    const map = {};
+    list.forEach(i => map[i.id] = (map[i.id] || 0) + 1);
+
+    const grid = document.getElementById('pokedex-grid');
+
+    const unlockedRegular = DATABASE.filter(d => map[d.id] > 0).length;
+    const unlockedLegend = LEGENDARY.filter(lg => isLegendaryUnlocked(lg, list) || map[lg.id] > 0).length;
+    const totalUnlocked = unlockedRegular + unlockedLegend;
+    document.getElementById('pokedex-stats').textContent = `實際已解鎖: ${totalUnlocked} / ${ALL_SPECIES.length}${demoModeActive ? ' (快閃預覽中)' : ''}`;
+
+    let itemsToRender = [];
+    if (tab === 'all') itemsToRender = ALL_SPECIES;
+    else if (tab === 'legendary') itemsToRender = LEGENDARY;
+    else itemsToRender = DATABASE.filter(d => d.realm === tab);
+
+    grid.innerHTML = itemsToRender.map(item => {
+      const c = map[item.id] || 0;
+      const isLeg = item.realm === 'legendary';
+      const realUnlocked = isLeg ? (isLegendaryUnlocked(item, list) || c > 0) : (c > 0);
+      const showVisual = realUnlocked || demoModeActive;
+
+      let badgeText = '';
+      if (isLeg) {
+        if (realUnlocked) badgeText = c > 0 ? `已培育 x${c}` : '已解鎖可培育';
+        else badgeText = demoModeActive ? `預覽 (${item.desc})` : item.desc;
+      } else {
+        if (c > 0) badgeText = `已培育 x${c}`;
+        else badgeText = demoModeActive ? '快閃預覽 (未收成)' : '未解鎖';
+      }
+
+      return `
+        <div class="slot-item ${isLeg ? 'legendary-slot' : ''} ${showVisual ? '' : 'locked'}">
+          <div class="slot-icon-wrap">
+            <svg viewBox="0 0 120 120">${item.svg}</svg>
+            ${showVisual ? '' : '<span class="mystery-q">?</span>'}
+          </div>
+          <strong style="${isLeg ? 'color:var(--legend);' : ''}">${showVisual ? item.name : '???'}</strong>
+          <span class="slot-badge" style="${isLeg ? 'background:var(--legend); color:white;' : ''}">
+            ${badgeText}
+          </span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ── 專注日誌（依「工作性質」分類篩選 + 多色區分不同工作與累計時數統計） ──
+  let currentJournalFilter = 'all';
+
+  const TAG_STYLES = {
+    '學習閱讀': { color: '#1D4ED8', bg: '#EFF6FF', border: '#3B82F6', icon: '📚' },
+    '工作專案': { color: '#C2410C', bg: '#FFF7ED', border: '#F97316', icon: '💻' },
+    '健康運動': { color: '#047857', bg: '#ECFDF5', border: '#10B981', icon: '🏃' },
+    '冥想沉澱': { color: '#6D28D9', bg: '#F5F3FF', border: '#8B5CF6', icon: '🧘' }
+  };
+  const CUSTOM_PALETTE = [
+    { color: '#B45309', bg: '#FFFBEB', border: '#F59E0B', icon: '🏷️' },
+    { color: '#BE185D', bg: '#FDF2F8', border: '#EC4899', icon: '🏷️' },
+    { color: '#0E7490', bg: '#ECFEFF', border: '#06B6D4', icon: '🏷️' },
+    { color: '#4338CA', bg: '#EEF2FF', border: '#6366F1', icon: '🏷️' }
+  ];
+
+  function getTagStyle(tagName) {
+    if (TAG_STYLES[tagName]) return TAG_STYLES[tagName];
+    let hash = 0;
+    for (let i = 0; i < tagName.length; i++) hash = tagName.charCodeAt(i) + ((hash << 5) - hash);
+    return CUSTOM_PALETTE[Math.abs(hash) % CUSTOM_PALETTE.length];
+  }
+
+  function renderJournal(filterTag = currentJournalFilter) {
+    currentJournalFilter = filterTag;
+    const list = getRecords();
+
+    // 動態整理所有出現過的工作性質標籤（預設 4 種 + 使用者自訂標籤）
+    const defaultTags = ['學習閱讀', '工作專案', '健康運動', '冥想沉澱'];
+    const allTags = Array.from(new Set([...defaultTags, ...list.map(i => i.tag).filter(Boolean)]));
+
+    // 渲染上方工作性質分類篩選按鈕
+    const tabsEl = document.getElementById('journal-tabs');
+    tabsEl.innerHTML = [
+      `<button class="f-btn ${filterTag === 'all' ? 'active' : ''}" data-jcat="all">全部紀錄</button>`,
+      ...allTags.map(t => {
+        const st = getTagStyle(t);
+        const isAct = filterTag === t;
+        return `<button class="f-btn ${isAct ? 'active' : ''}" data-jcat="${t}" style="${isAct ? `background:${st.border}; color:#fff;` : `border-color:${st.border}44; color:${st.color}; background:${st.bg};`}">${st.icon} ${t}</button>`;
+      })
+    ].join('');
+
+    tabsEl.querySelectorAll('.f-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        renderJournal(btn.dataset.jcat);
+      });
+    });
+
+    // 計算並渲染各工作性質做了多久的彩色統計條
+    const tagTotals = {};
+    list.forEach(item => {
+      const t = item.tag || '學習閱讀';
+      tagTotals[t] = (tagTotals[t] || 0) + (item.mins || 0);
+    });
+
+    const statsEl = document.getElementById('journal-tag-stats');
+    statsEl.innerHTML = allTags.map(t => {
+      const mins = tagTotals[t] || 0;
+      const st = getTagStyle(t);
+      return `
+        <div style="display:flex; align-items:center; gap:6px; padding:5px 12px; border-radius:99px; background:${st.bg}; border:1.5px solid ${st.border}; color:${st.color}; font-size:0.78rem; font-weight:800;">
+          <span style="width:8px; height:8px; border-radius:50%; background:${st.border}; display:inline-block;"></span>
+          <span>${t}：${mins} 分鐘</span>
+        </div>
+      `;
+    }).join('');
+
+    const filtered = filterTag === 'all' ? list : list.filter(i => i.tag === filterTag);
+    const totalMins = filtered.reduce((acc, cur) => acc + (cur.mins || 0), 0);
+    document.getElementById('journal-summary').textContent = `共 ${filtered.length} 筆紀錄（累計 ${totalMins} 分鐘）`;
+
+    const container = document.getElementById('journal-list');
+    if (filtered.length === 0) {
+      container.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:28px;">此工作性質目前尚無專注紀錄</div>`;
+      return;
+    }
+    container.innerHTML = filtered.map(item => {
+      const sp = ALL_SPECIES.find(s => s.id === item.id) || DATABASE[0];
+      const st = getTagStyle(item.tag || '學習閱讀');
+      const d = new Date(item.time);
+      const timeStr = `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+      return `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:#FAF8F4; border-radius:14px; border-left:6px solid ${st.border}; box-shadow:0 2px 6px rgba(0,0,0,0.02);">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span style="width:10px; height:28px; border-radius:99px; background:${st.border}; display:inline-block; flex-shrink:0;" title="${item.tag}"></span>
+            <div style="width:40px; height:40px; flex-shrink:0;"><svg viewBox="0 0 120 120" style="width:100%; height:100%;">${sp.svg}</svg></div>
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <strong style="font-size:0.95rem;">${item.name}</strong>
+              <span style="font-size:0.75rem; font-weight:800; color:${st.color}; background:${st.bg}; border:1px solid ${st.border}; padding:2px 9px; border-radius:99px;">${st.icon} ${item.tag}</span>
+            </div>
+          </div>
+          <div style="text-align:right; flex-shrink:0;">
+            <div style="font-weight:800; color:${st.color}; font-size:0.95rem;">${item.mins} 分鐘</div>
+            <div style="font-size:0.72rem; color:var(--text-muted);">${timeStr}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ── 好友戰績互換（無伺服器，URL fragment 不上傳至網站） ──
+  const SOCIAL_ID_KEY = 'mori_social_user_id_v2';
+  const SOCIAL_NAME_KEY = 'mori_social_name_v2';
+  const SOCIAL_PREFIX = 'MORI2.';
+  function getMySocialId() {
+    let id = localStorage.getItem(SOCIAL_ID_KEY);
+    if (!id) {
+      id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() :
+        'mori-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 12);
+      localStorage.setItem(SOCIAL_ID_KEY, id);
+    }
+    return id;
+  }
+  function getCustomFriends() {
+    try {
+      const v = JSON.parse(localStorage.getItem(FRIENDS_KEY) || '[]');
+      return Array.isArray(v) ? v.filter(x => x && x.uid && x.name) : [];
+    } catch(e) { return []; }
+  }
+  function encodeCard(obj) {
+    const bytes = new TextEncoder().encode(JSON.stringify(obj));
+    let str = '';
+    bytes.forEach(b => { str += String.fromCharCode(b); });
+    return SOCIAL_PREFIX + btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+  }
+  function decodeCard(raw) {
+    let token = raw.trim();
+    if (/^https?:\/\//i.test(token) || /^file:\/\//i.test(token)) {
+      const url = new URL(token);
+      token = new URLSearchParams(url.hash.slice(1)).get('friend') || '';
+    }
+    // Also accept text pasted from messaging applications.
+    const match = token.match(/MORI2\.[A-Za-z0-9_-]+/);
+    if (match) token = match[0];
+    if (!token.startsWith(SOCIAL_PREFIX)) throw new Error('請使用新版 MORI2 戰績碼；舊版對戰碼無法驗證好友身分。');
+    const body = token.slice(SOCIAL_PREFIX.length).replace(/-/g, '+').replace(/_/g, '/');
+    if (body.length > 8000) throw new Error('戰績碼過長');
+    const bin = atob(body);
+    const data = JSON.parse(new TextDecoder('utf-8', {fatal:true}).decode(Uint8Array.from(bin, x => x.charCodeAt(0))));
+    if (!data || data.v !== 2 || typeof data.uid !== 'string' || !/^[a-zA-Z0-9_-]{8,100}$/.test(data.uid) ||
+        typeof data.name !== 'string' || !data.name.trim() || data.name.length > 24 ||
+        ![data.count, data.mins, data.unlocked].every(n => Number.isSafeInteger(n) && n >= 0 && n <= 10000000)) {
+      throw new Error('戰績內容格式不正確');
+    }
+    if (data.uid === getMySocialId()) throw new Error('不能把自己的戰績當作好友匯入。');
+    return { uid:data.uid, name:data.name.trim(), count:data.count, mins:data.mins, unlocked:data.unlocked, updatedAt:Date.now() };
+  }
+  function makeMyCard() {
+    const rec = getRecords();
+    return {v:2, uid:getMySocialId(), name:(localStorage.getItem(SOCIAL_NAME_KEY) || '森境冒險家').slice(0,24),
+      count:rec.length, mins:Math.round(rec.reduce((a,b)=>a+(Number(b.mins)||0),0)),
+      unlocked:new Set(rec.map(x=>x.id)).size};
+  }
+  function makeFriendLink() {
+    if (!/^https?:$/.test(location.protocol)) return null;
+    const url = new URL(location.href);
+    url.hash = 'friend=' + encodeURIComponent(encodeCard(makeMyCard()));
+    return url.href;
+  }
+  function updateInviteUI() {
+    const cnt = getInviteCount();
+    document.getElementById('invite-badge').textContent = `已交換好友戰績：${cnt} / 5 位 ${cnt >= 5 ? '（🐉 已解鎖！）' : ''}`;
+  }
+  function renderSocialLeaderboard() {
+    updateInviteUI();
+    const card = makeMyCard();
+    const code = encodeCard(card);
+    document.getElementById('my-pk-code').value = code;
+    const field = document.getElementById('social-name');
+    if (document.activeElement !== field) field.value = localStorage.getItem(SOCIAL_NAME_KEY) || '';
+    document.getElementById('social-share-hint').textContent = makeFriendLink()
+      ? '✅ 網站版可產生分享連結。好友打開連結後會看到匯入確認；戰績更新仍需再次分享。'
+      : '📁 目前是本機 HTML：可複製戰績代碼分享；要讓朋友直接點網址打開遊戲，必須先把同一個 HTML 部署到 HTTPS 網站。';
+    const arr = [{...card, isMe:true}, ...getCustomFriends()].sort((a,b)=>b.mins-a.mins || b.count-a.count);
+    const box = document.getElementById('leaderboard-list');
+    box.replaceChildren();
+    arr.forEach((p,i)=>{
+      const row=document.createElement('div'); row.className='rank-row'+(p.isMe?' me':'');
+      const left=document.createElement('div'); left.style.cssText='display:flex;align-items:center;gap:10px;min-width:0;';
+      const medal=document.createElement('span'); medal.className='rank-medal'; medal.textContent=['🥇','🥈','🥉'][i] || '#'+(i+1);
+      const details=document.createElement('div'); details.style.cssText='min-width:0;overflow-wrap:anywhere;';
+      const name=document.createElement('div'); name.textContent=p.isMe?p.name+'（我）':p.name;
+      const small=document.createElement('div'); small.style.cssText='font-size:.74rem;color:var(--text-muted)'; small.textContent=`收成 ${p.count} 隻｜解鎖 ${p.unlocked} 種`;
+      details.append(name,small); left.append(medal,details);
+      const right=document.createElement('strong'); right.style.cssText='white-space:nowrap;color:var(--primary-dark)';right.textContent=p.mins+' 分鐘';
+      row.append(left,right); box.append(row);
+    });
+    if(arr.length===1){const hint=document.createElement('p'); hint.style.cssText='text-align:center;font-size:.78rem;color:var(--text-muted)';hint.textContent='尚未匯入好友，先將戰績碼傳給朋友吧！';box.append(hint);}
+  }
+  async function importFriend(input, silent=false) {
+    try {
+      const friend=decodeCard(input);
+      const friends=getCustomFriends();
+      const existing=friends.findIndex(x=>x.uid===friend.uid);
+      if(existing>=0) friends[existing]=friend;
+      else friends.push(friend);
+      localStorage.setItem(FRIENDS_KEY,JSON.stringify(friends.slice(-100)));
+      renderSocialLeaderboard(); renderPokedex();
+      const me=makeMyCard();
+      const result=document.getElementById('pk-result-box'); result.style.display='block';
+      result.textContent=`✅ ${existing>=0?'已更新':'已加入'}「${friend.name}」的戰績！ 你：${me.mins} 分鐘；好友：${friend.mins} 分鐘。${me.mins>=friend.mins?'🏆 你目前領先或平手！':'🔥 好友目前領先！'}（資料為分享當下的快照）`;
+      if(getInviteCount()===5 && existing<0){launchConfettiShower(); await showNotice('🐉 已交換 5 位不同好友的戰績，星穹聖龍解鎖！');}
+      else if(!silent) await showNotice(`✅ ${existing>=0?'更新':'新增'}好友成功！請朋友再分享新版戰績碼來更新成績。`);
+      return true;
+    } catch(err) { if(!silent) await showNotice('⚠️ 匯入失敗：'+err.message); return false; }
+  }
+  document.getElementById('social-name').addEventListener('change',e=>{
+    localStorage.setItem(SOCIAL_NAME_KEY,e.target.value.trim().slice(0,24)||'森境冒險家');renderSocialLeaderboard();
+  });
+  document.getElementById('btn-invite-friend').addEventListener('click',async()=>{
+    const link=makeFriendLink();
+    if(!link){await showNotice('📁 這份檔案是從本機開啟的，沒有可以讓朋友連到的公開網址。請先把 HTML 部署到 HTTPS 網站，或直接使用「複製戰績代碼」傳給好友。');return;}
+    if(navigator.share){try{await navigator.share({title:'森境專注鐘',text:'來森境一起專注養成！這是我的好友戰績：',url:link});return;}catch(e){if(e.name==='AbortError')return;}}
+    if(await copyTextSafe(link))await showNotice('🔗 已複製分享連結，貼給朋友即可！');
+  });
+  document.getElementById('btn-copy-link').addEventListener('click',async()=>{
+    const link=makeFriendLink();
+    if(!link){await showNotice('此 HTML 尚未有公開網址，無法直接複製可用的連結；請先部署網站，或複製戰績代碼。');return;}
+    if(await copyTextSafe(link))await showNotice('🔗 已複製好友連結！');
+  });
+  document.getElementById('btn-copy-pk').addEventListener('click',async()=>{
+    if(await copyTextSafe(encodeCard(makeMyCard())))await showNotice('📋 已複製戰績代碼！朋友在同一款森境專注鐘的好友頁貼上即可匯入。');
+  });
+  document.getElementById('btn-run-pk').addEventListener('click',async()=>{
+    const el=document.getElementById('friend-pk-input');const ok=await importFriend(el.value);
+    if(ok)el.value='';
+  });
+  document.getElementById('btn-clear-friends').addEventListener('click',async()=>{
+    if(await showConfirmModal('確定刪除全部匯入的好友戰績嗎？星穹聖龍的好友解鎖進度也會重置。')){
+      localStorage.removeItem(FRIENDS_KEY);renderSocialLeaderboard();renderPokedex();
+    }
+  });
+  async function consumeInviteLink() {
+    const params=new URLSearchParams(location.hash.slice(1));
+    const token=params.get('friend');
+    if(!token)return;
+    // Clear link from browser address bar to avoid re-importing on refresh.
+    try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}
+    const ok=await showConfirmModal('偵測到好友分享的森境戰績，是否將這位好友加入／更新排行榜？');
+    if(ok){
+      const imported=await importFriend(token);
+      if(imported)document.querySelector('.nav-btn[data-view="social"]').click();
+    }
+  }
+
+  // ── 物種挑選彈窗（顯示各物種專屬 Stage 1 初生樣貌，傳奇物種需解鎖才可選） ──
+  targetBtn.addEventListener('click', async () => {
+    if (!(await checkAbandonIfActive())) return;
+
+    const grid = document.getElementById('picker-grid');
+    const records = getRecords();
+    const map = {};
+    records.forEach(i => map[i.id] = (map[i.id] || 0) + 1);
+
+    const activeRealmBtn = document.querySelector('.realm-btn.active');
+    const pickRealm = currentRealm === 'break'
+      ? (activeRealmBtn ? activeRealmBtn.dataset.realm : 'animal')
+      : currentRealm;
+
+    const isLegRealm = pickRealm === 'legendary';
+    const available = isLegRealm ? LEGENDARY : DATABASE.filter(d => d.realm === pickRealm);
+    const realmTitle = pickRealm === 'animal' ? '動物' : (pickRealm === 'plant' ? '植物' : (pickRealm === 'microbe' ? '微生物' : '限定傳奇'));
+    document.getElementById('picker-title').textContent = `挑選培育目標 (${realmTitle})`;
+
+    grid.innerHTML = available.map(d => {
+      const unlocked = isLegRealm ? (isLegendaryUnlocked(d, records) || map[d.id] > 0) : true;
+      return `
+        <div class="select-item ${unlocked ? '' : 'locked-pick'}" data-id="${d.id}" data-unlocked="${unlocked}">
+          <div style="width:56px; height:56px; position:relative;">
+            ${unlocked ? getSpeciesStageSvg(d, 1) : `<div style="filter:brightness(0) opacity(0.2); width:100%; height:100%;"><svg viewBox="0 0 120 120">${d.svg}</svg></div><span class="mystery-q">🔒</span>`}
+          </div>
+          <span>${unlocked ? d.name : `🔒 ${d.name}`}</span>
+          ${isLegRealm ? `<span style="font-size:0.65rem; color:var(--legend);">${unlocked ? '已解鎖可培育' : d.desc}</span>` : ''}
+        </div>
+      `;
+    }).join('');
+
+    document.getElementById('picker-modal').style.display = 'flex';
+
+    document.querySelectorAll('.select-item').forEach(el => {
+      el.addEventListener('click', () => {
+        const sp = ALL_SPECIES.find(s => s.id === el.dataset.id);
+        if (el.dataset.unlocked !== 'true') {
+          showNotice(`🔒 尚未解鎖【${sp.name}】！\n解鎖條件：${sp.desc}`);
+          return;
+        }
+        currentTarget = sp;
+        targetBtn.textContent = `${sp.realm==='legendary'?'✨':'🐾'} ${currentTarget.name} (點此更換物種)`;
+        document.getElementById('picker-modal').style.display = 'none';
+        updateMainViewport(true);
+      });
+    });
+  });
+
+  document.getElementById('close-picker-btn').addEventListener('click', () => {
+    document.getElementById('picker-modal').style.display = 'none';
+  });
+
+  // ── 側邊欄與分頁切換（含防誤觸提醒與隱藏重複分類列） ──
+  const sidebar = document.getElementById('sidebar');
+  document.getElementById('btn-toggle-sidebar').addEventListener('click', () => {
+    sidebar.classList.toggle('collapsed');
+  });
+
+  const views = {
+    timer: document.getElementById('view-timer'),
+    habitat: document.getElementById('view-habitat'),
+    pokedex: document.getElementById('view-pokedex'),
+    journal: document.getElementById('view-journal'),
+    social: document.getElementById('view-social'),
+    settings: document.getElementById('view-settings')
+  };
+
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const target = btn.dataset.view;
+      if (target !== 'timer' && !(await checkAbandonIfActive())) return;
+
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      Object.keys(views).forEach(k => views[k].style.display = k === target ? 'block' : 'none');
+
+      document.getElementById('timer-realm-switch').style.display = target === 'timer' ? 'flex' : 'none';
+
+      if (target === 'habitat') renderHabitatIsland('today');
+      if (target === 'pokedex') renderPokedex('all');
+      if (target === 'journal') renderJournal('all');
+      if (target === 'social') renderSocialLeaderboard();
+    });
+  });
+
+  // 專注計時頁的界別按鈕切換
+  document.querySelectorAll('.realm-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!(await checkAbandonIfActive())) return;
+
+      const nextRealm = btn.dataset.realm;
+      if (nextRealm === 'legendary') {
+        const records = getRecords();
+        const unlockedList = LEGENDARY.filter(lg => isLegendaryUnlocked(lg, records));
+        document.querySelectorAll('.realm-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentRealm = 'legendary';
+        if (unlockedList.length > 0) {
+          currentTarget = unlockedList[0];
+          targetBtn.textContent = `✨ ${currentTarget.name} (點此更換物種)`;
+        } else {
+          targetBtn.click();
+        }
+        resetTimerRound();
+        return;
+      }
+
+      document.querySelectorAll('.realm-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentRealm = nextRealm;
+      currentTarget = DATABASE.find(d => d.realm === currentRealm);
+      targetBtn.textContent = `🌱 ${currentTarget.name} (點此更換物種)`;
+      resetTimerRound();
+    });
+  });
+
+  // 標籤選擇
+  document.querySelectorAll('.tag-pill').forEach(pill => {
+    if (pill.id === 'custom-tag-btn') {
+      pill.addEventListener('click', async () => {
+        const val = await showPromptModal('請輸入自訂專注標籤名稱：', '英文檢定');
+        if (val) {
+          currentTag = val;
+          document.querySelectorAll('.tag-pill').forEach(p => p.classList.remove('active'));
+          pill.textContent = `🏷️ ${val}`;
+          pill.classList.add('active');
+        }
+      });
+      return;
+    }
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('.tag-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      currentTag = pill.dataset.tag;
+    });
+  });
+
+  // 時間預設切換
+  document.querySelectorAll('#timer-presets .time-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (timerStatus === 'GRACE_PERIOD') {
+        showNotice('請先完成採收！');
+        return;
+      }
+      if (!(await checkAbandonIfActive())) return;
+
+      document.querySelectorAll('#timer-presets .time-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const activeRealmBtn = document.querySelector('.realm-btn.active');
+      const selectedRealm = activeRealmBtn ? activeRealmBtn.dataset.realm : 'animal';
+
+      const val = btn.dataset.m;
+      if (val === 'break') {
+        currentRealm = 'break';
+        totalSeconds = 5 * 60;
+      } else if (val === 'test8s') {
+        currentRealm = selectedRealm;
+        totalSeconds = 8; // 8 秒測試：每 2 秒進化一個階段！
+      } else if (val === 'custom') {
+        currentRealm = selectedRealm;
+        const customM = await showPromptModal('請輸入專注分鐘數 (1-120)：', '30');
+        const num = parseFloat(customM);
+        totalSeconds = (!isNaN(num) && num > 0) ? Math.round(num * 60) : 25 * 60;
+      } else {
+        currentRealm = selectedRealm;
+        totalSeconds = parseInt(val, 10) * 60;
+      }
+      resetTimerRound();
+    });
+  });
+
+  // 圖鑑分頁按鈕
+  document.querySelectorAll('#pokedex-tabs .f-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#pokedex-tabs .f-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderPokedex(btn.dataset.pcat);
+    });
+  });
+
+  document.querySelectorAll('#habitat-timespan .f-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#habitat-timespan .f-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderHabitatIsland(btn.dataset.span);
+    });
+  });
+
+  // ── 系統設定項目事件綁定 ──
+  const themeSetting = document.getElementById('setting-theme');
+  if (themeSetting) {
+    themeSetting.addEventListener('change', (e) => {
+      document.body.className = e.target.value === 'default' ? '' : e.target.value;
+      if (!document.getElementById('setting-show-tags')?.checked) {
+        document.body.classList.add('hide-island-tags');
+      }
+    });
+  }
+
+  const graceSetting = document.getElementById('setting-grace-sec');
+  if (graceSetting) {
+    graceSetting.addEventListener('change', (e) => {
+      maxGraceSeconds = parseInt(e.target.value, 10);
+    });
+  }
+
+  const tagSetting = document.getElementById('setting-show-tags');
+  if (tagSetting) {
+    tagSetting.addEventListener('change', (e) => {
+      document.body.classList.toggle('hide-island-tags', !e.target.checked);
+    });
+  }
+
+  const testModeSetting = document.getElementById('setting-test-mode');
+  if (testModeSetting) {
+    testModeSetting.addEventListener('change', (e) => {
+      document.getElementById('btn-test-8s').style.display = e.target.checked ? 'inline-block' : 'none';
+    });
+  }
+
+  // 90 秒全生物快閃體驗（保留原有生物與閱讀時間，90 秒後僅移除快閃生物）
+  document.getElementById('btn-unlock-demo').addEventListener('click', () => {
+    if (demoCountdownTimer) clearInterval(demoCountdownTimer);
+    demoModeActive = true;
+    demoRemainSec = 90;
+
+    const banner = document.getElementById('demo-banner');
+    const secSpan = document.getElementById('demo-sec');
+    banner.style.display = 'block';
+    secSpan.textContent = demoRemainSec;
+
+    renderHabitatIsland('today');
+    renderPokedex();
+
+    demoCountdownTimer = setInterval(() => {
+      demoRemainSec--;
+      secSpan.textContent = demoRemainSec;
+      if (demoRemainSec <= 0) {
+        clearInterval(demoCountdownTimer);
+        demoModeActive = false;
+        banner.style.display = 'none';
+        renderHabitatIsland('today');
+        renderPokedex();
+      }
+    }, 1000);
+
+    showNotice('🌟 已啟動 90 秒全生物快閃展示！僅於「生態仙境」與「物種圖鑑」提供視覺預覽，不會解鎖專注計時中的傳奇角色培育權限。');
+  });
+
+  // 清空所有紀錄事件綁定
+  document.getElementById('btn-clear-all').addEventListener('click', async () => {
+    const ok = await showConfirmModal('確定要清除所有島嶼生物、專注日誌與好友對決紀錄嗎？此動作無法復原。');
+    if (ok) {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(INVITE_KEY);
+      localStorage.removeItem(FRIENDS_KEY);
+      if (demoCountdownTimer) clearInterval(demoCountdownTimer);
+      demoModeActive = false;
+      document.getElementById('demo-banner').style.display = 'none';
+
+      resetTimerRound();
+      renderHabitatIsland('today');
+      renderPokedex('all');
+      renderJournal('all');
+      renderSocialLeaderboard();
+      showNotice('🗑️ 已清空所有專注紀錄與島嶼資料！');
+    }
+  });
+
+  // ── 主控制按鈕（開始／暫停／採收／放棄）與白噪音即時切換事件綁定 ──
+  btnToggle.addEventListener('click', () => {
+    if (timerStatus === 'IDLE' || timerStatus === 'PAUSED') {
+      startFocus();
+    } else if (timerStatus === 'RUNNING') {
+      pauseFocus();
+    } else if (timerStatus === 'GRACE_PERIOD') {
+      executeSuccessfulHarvest();
+    } else if (timerStatus === 'WILTED') {
+      resetTimerRound();
+    }
+  });
+
+  btnGiveup.addEventListener('click', () => {
+    giveupFocus();
+  });
+
+  chkSound.addEventListener('change', () => {
+    if (timerStatus === 'RUNNING') {
+      if (chkSound.checked) startAmbientSound();
+      else stopAmbientSound();
+    }
+  });
+
+  soundSelect.addEventListener('change', () => {
+    if (timerStatus === 'RUNNING' && chkSound.checked) {
+      startAmbientSound();
+    }
+  });
+
+  // ── 頁面啟動初始化 ──
+  window.addEventListener('DOMContentLoaded', () => {
+    resetTimerRound();
+    renderHabitatIsland('today');
+    renderPokedex('all');
+    renderJournal('all');
+    renderSocialLeaderboard();
+    consumeInviteLink();
+  });
+</script>
+</body>
+</html>
